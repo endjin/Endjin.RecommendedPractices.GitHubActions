@@ -131,20 +131,19 @@ jobs:
       uses: actions/checkout@v3
     - name: Cleanup
       run: |
-        & gh extension install actions/gh-actions-cache
-        
-        $cacheEntries = & gh actions-cache list -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF |
-                            ConvertFrom-CSV -Header key,size,ref,time -Delimiter `t
+        $cacheEntries = & gh actions-cache list -R endjin/dotnet-adr -B feature/gha-build |
+                          ConvertFrom-CSV -Header key,size,ref,time -Delimiter `t
 
-        $cachesToDelete = $cacheEntries | ? { $_.key.EndsWith($env:GITHUB_SHA) -and $_.ref -eq $env:GITHUB_REF } | Select -Unique
+        $cachesToDelete = $cacheEntries |
+                            Where-Object { $_.key -eq "build-state-$($env:GITHUB_SHA)" -and $_.ref -eq $env:GITHUB_REF } |
+                            Select-Object -Unique
 
         if (!$cachesToDelete) {
-            Write-Host "No caches to delete for '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+            Write-Host "No caches to delete for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
         }
         else {
-            $cachesToDelete | Select
             foreach ($cache in $cachesToDelete) {
-                Write-Host "Deleting cache: '$($cache.key)' for '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+                Write-Host "Deleting cache: '$($cache.key)' for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
                 & gh actions-cache delete $cache.key -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF --confirm
             }
         }
