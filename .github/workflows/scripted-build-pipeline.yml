@@ -15,6 +15,12 @@ on:
         required: false
         default: ''
         type: string
+      forcePublish:
+        description: When true, the Publish stage will be run regardless of the current branch or tag.
+        required: false
+        default: false
+        type: boolean
+
 
 jobs:
   compile:
@@ -90,6 +96,7 @@ jobs:
     - test
     - package
     name: Publish
+    if: inputs.forcePublish || startsWith(github.ref, "refs/tags/")
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
