@@ -20,7 +20,11 @@ on:
         required: false
         default: false
         type: boolean
-
+      skipCleanup:
+        description: When true the pipeline clean-up stage will not be run. For example, the cache used between pipeline stages will be retained.
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   compile:
@@ -111,3 +115,39 @@ jobs:
         inputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
+
+  cleanup:
+    needs:
+    - compile
+    - test
+    - package
+    - publish
+    name: Cleanup
+    if: always() && !skipCleanup
+    runs-on: ubuntu-latest
+    steps:
+    # We need to checkout the repo to get the branch information
+    - name: Check out code
+      uses: actions/checkout@v3
+    - name: Cleanup
+      run: |
+        & gh extension install actions/gh-actions-cache
+        
+        $cacheEntries = & gh actions-cache list -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF |
+                            ConvertFrom-CSV -Header key,size,ref,time -Delimiter `t
+
+        $cachesToDelete = $cacheEntries | ? { $_.key.EndsWith($env:GITHUB_SHA) -and $_.ref -eq $env:GITHUB_REF } | Select -Unique
+
+        if (!$cachesToDelete) {
+            Write-Host "No caches to delete for '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+        }
+        else {
+            $cachesToDelete | Select
+            foreach ($cache in $cachesToDelete) {
+                Write-Host "Deleting cache: '$($cache.key)' for '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+                & gh actions-cache delete $cache.key -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF --confirm
+            }
+        }
+      shell: pwsh
+      env:
+        GH_TOKEN: ${{ github.token }}
