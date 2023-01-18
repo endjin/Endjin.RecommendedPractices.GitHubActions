@@ -1,0 +1,106 @@
+on:
+  workflow_call:
+    inputs:
+      netSdkVersion:
+        description: The primary .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+        required: true
+        type: string
+        default: '6.0.x'
+      additionalNetSdkVersion:
+        description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+        required: false
+        type: string
+      additionalCachePaths:
+        description: Custom paths that need to be included in the multi-stage pipeline caching.
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  compile:
+    name: Compile & Analyse
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.run_build.outputs.SemVer }}
+      major: ${{ steps.run_build.outputs.Major }}
+      majorMinor: ${{ steps.run_build.outputs.Major }}.${{ steps.run_build.outputs.Minor }}
+      preReleaseTag: ${{ steps.run_build.outputs.PreReleaseTag }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      with:
+        displayName: Compile & Analyse
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        tasks: 'Build,Analysis'
+        outputCachePaths: |
+          .nuget-packages
+          Solutions
+          ${{ inputs.additionalCachePaths }}
+
+  test:
+    needs:
+    - compile
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      with:
+        displayName: Run Tests
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        tasks: 'Test,TestReport'
+        inputCachePaths: |
+          .nuget-packages
+          Solutions
+          ${{ inputs.additionalCachePaths }}
+
+  package:
+    needs:
+    - compile
+    name: Build Packages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      with:
+        displayName: Build Packages
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        tasks: 'Package'
+        inputCachePaths: |
+          .nuget-packages
+          Solutions
+          ${{ inputs.additionalCachePaths }}
+        outputCachePaths: |
+          _packages
+          ${{ inputs.additionalCachePaths }}
+
+  publish:
+    needs:
+    - compile
+    - test
+    - package
+    name: Publish Packages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      with:
+        displayName: Publish Packages
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        tasks: 'Publish'
+        inputCachePaths: |
+          _packages
+          ${{ inputs.additionalCachePaths }}

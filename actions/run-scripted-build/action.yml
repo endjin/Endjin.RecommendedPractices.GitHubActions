@@ -1,0 +1,80 @@
+name: 'Endjin.RecommendedPractices.Build.RunBuildScript'
+description: 'Runs the standardised build script'
+inputs:
+  displayName:
+    description: The display name given to the step running the build script
+    required: true
+    default: 'Run Build Script'
+  netSdkVersion:
+    description: The primary .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+    required: true
+    default: '6.0.x'
+  additionalNetSdkVersion:
+    description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+    required: false
+  tasks:
+    description: The tasks that need to be run as part of the build script, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
+    required: true
+  inputCachePaths:
+    description: The caches paths that are consumed/required by this build script execution
+    required: false
+    default: ''
+  outputCachePaths:
+    description: The caches paths that are updated by this build script execution
+    required: false
+    default: ''
+outputs:
+  random-number:
+    description: "Random number"
+    value: ${{ steps.random-number-generator.outputs.random-number }}
+
+runs:
+  using: "composite"
+  steps:
+  - uses: actions/setup-dotnet@v3
+    name: Install .NET Core SDK ${{ inputs.netSdkVersion }}
+    with:
+      dotnet-version: '${{ inputs.netSdkVersion }}'
+  
+  - uses: actions/setup-dotnet@v3
+    if: ${{ inputs.additionalNetSdkVersion }}
+    name: Install .NET Core SDK ${{ inputs.additionalNetSdkVersion }}
+    with:
+      dotnet-version: '${{ inputs.additionalNetSdkVersion }}'
+
+  - name: Debug cache paths (before)
+    run: |
+      echo "inputCachePaths: ${{ inputs.inputCachePaths }}"
+      echo "outputCachePaths: ${{ inputs.outputCachePaths }}"
+    shell: bash
+
+  - name: Restore Cached Inputs
+    if: inputs.inputCachePaths != ''
+    id: cache_inputs_restore
+    uses: actions/cache/restore@v3
+    with:
+      path: ${{ inputs.inputCachePaths }}
+      key: build-state-${{ github.sha }}
+
+  - id: cache_debug
+    run: |
+      echo "CacheHit: '${{ steps.cache_inputs_restore.outputs.cache-hit }}'"
+    shell: bash
+  
+  - id: run_script
+    name: ${{ inputs.displayName }}
+    run: |
+      $tasks = "${{ inputs.tasks }}" -split ","
+      ./build.ps1 -Tasks $tasks
+    shell: pwsh
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
+
+  - name: Save Cached Outputs
+    id: cache_outputs_save
+    if: inputs.outputCachePaths
+    uses: actions/cache/save@v3
+    with:
+      path: ${{ inputs.outputCachePaths }}
+      key: build-state-${{ github.sha }}
