@@ -70,6 +70,11 @@ jobs:
           .nuget-packages
           Solutions
           ${{ inputs.additionalCachePaths }}
+    - name: Code Coverage Report 1
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: _codeCoverage/Cobertura.xml
+        minimum_coverage: 75
     - name: Code Coverage Report 2
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
