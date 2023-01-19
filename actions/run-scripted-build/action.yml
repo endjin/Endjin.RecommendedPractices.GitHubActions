@@ -12,6 +12,10 @@ inputs:
   additionalNetSdkVersion:
     description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
     required: false
+  netSdkQuality:
+    description: Allows pre-release versions of the .NET SDK to be installed, valid values are 'ga', 'preview', 'validated', 'signed' & 'daily' 
+    required: false
+    default: 'ga'
   tasks:
     description: The tasks that need to be run as part of the build script, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
     required: true
@@ -35,12 +39,14 @@ runs:
     name: Install .NET Core SDK ${{ inputs.netSdkVersion }}
     with:
       dotnet-version: '${{ inputs.netSdkVersion }}'
+      dotnet-quality: '${{ inputs.netSdkQuality }}'
   
   - uses: actions/setup-dotnet@v3
     if: ${{ inputs.additionalNetSdkVersion }}
     name: Install .NET Core SDK ${{ inputs.additionalNetSdkVersion }}
     with:
       dotnet-version: '${{ inputs.additionalNetSdkVersion }}'
+      dotnet-quality: '${{ inputs.netSdkQuality }}'
 
   - name: Debug cache paths (before)
     run: |
