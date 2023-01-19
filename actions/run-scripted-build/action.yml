@@ -28,9 +28,18 @@ inputs:
     required: false
     default: ''
 outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+  semver:
+    description: "The full SemVer version number of the current build"
+    value: ${{ steps.run_script.outputs.SemVer }}
+  major:
+    description: "The major version component of the current build"
+    value: ${{ steps.run_script.outputs.Major }}
+  majorMinor:
+    description: "The major & minor components of the current build"
+    value: ${{ steps.run_script.outputs.Major }}.${{ steps.run_script.outputs.Minor }}
+  preReleaseTag:
+    description: "The pre-release tag, if any, of the current build"
+    value: ${{ steps.run_script.outputs.PreReleaseTag }}
 
 runs:
   using: "composite"

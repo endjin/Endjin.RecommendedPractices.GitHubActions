@@ -31,16 +31,17 @@ jobs:
     name: Compile & Analyse
     runs-on: ubuntu-latest
     outputs:
-      semver: ${{ steps.run_build.outputs.SemVer }}
-      major: ${{ steps.run_build.outputs.Major }}
-      majorMinor: ${{ steps.run_build.outputs.Major }}.${{ steps.run_build.outputs.Minor }}
-      preReleaseTag: ${{ steps.run_build.outputs.PreReleaseTag }}
+      semver: ${{ steps.run_compile.outputs.semver }}
+      major: ${{ steps.run_compile.outputs.major }}
+      majorMinor: ${{ steps.run_compile.outputs.majorMinor }}
+      preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      id: run_compile
       with:
         displayName: Compile & Analyse
         netSdkVersion: ${{ inputs.netSdkVersion }}
@@ -153,6 +154,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - name: Debug version output variables
+      run: |
+        echo "SemVer: ${{ needs.compile.outputs.semver }}"
+      shell: bash
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
