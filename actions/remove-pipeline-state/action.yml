@@ -1,0 +1,52 @@
+name: 'Endjin.RecommendedPractices.Build.RemovePipelineState'
+description: 'Removes the convention-based cache entries used to store pipeline state between jobs for a given pipeline run'
+inputs:
+  cacheKeyPrefix:
+    description: The string prefix used in the cache key naming convention.
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Remove pipeline state
+    run: |
+      $ErrorActionPreference = "Stop"
+
+      # Check we have the required environment variables
+      $requiredEnvVars = @(
+        "$($env:GITHUB_SHA)"
+        "$($env:GITHUB_REF)"
+        "$($env:GITHUB_REPOSITORY)"
+      )
+      if ("" -in $requiredEnvVars) {
+        Write-Error "This action requires GITHUB_SHA, GITHUB_REF and GITHUB_REPOSITORY to be defined - are you missing the 'checkout' action?"
+      }
+
+      # Install the non-default GH cli extension
+      & gh extension install actions/gh-actions-cache
+      
+      # Find cache entries for the specified repo & branch, parsing the CSV output into an object
+      $cacheEntries = & gh actions-cache list -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF |
+                        ConvertFrom-CSV -Header key,size,ref,time -Delimiter `t
+
+      # Filter the cache entries that relate to the current commit/ref using our naming convention.
+      # This can return multiple entries for a given key, but the subsequent 'delete' command will delete 
+      # them all in a single operation, so we use '-Unique' to get a distinct set - given our usage this 
+      # should always a single item.
+      $cachesToDelete = $cacheEntries |
+                          Where-Object { $_.key -eq "$($env:PREFIX)-$($env:GITHUB_SHA)" -and $_.ref -eq $env:GITHUB_REF } |
+                          Select-Object -Unique
+
+      if (!$cachesToDelete) {
+          Write-Host "No caches to delete for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+      }
+      else {
+          foreach ($cache in $cachesToDelete) {
+              Write-Host "Deleting cache: '$($cache.key)' for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+              & gh actions-cache delete $cache.key -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF --confirm
+          }
+      }
+    shell: pwsh
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PREFIX: ${{ inputs.cacheKeyPrefix }}
