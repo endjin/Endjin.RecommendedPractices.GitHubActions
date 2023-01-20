@@ -118,6 +118,12 @@ jobs:
         name: Code Coverage
         title: Code Coverage Report
         body-file: code-coverage-results.md
+    - name: Publish Test Results from .trx file
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        nunit_files: "*TestResults.xml"   # produced by Pester
+        trx_files: "*.trx"                # produced by dotnet test
 
   package:
     needs:
