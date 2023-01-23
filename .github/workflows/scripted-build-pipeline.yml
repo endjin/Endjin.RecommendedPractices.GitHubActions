@@ -71,6 +71,13 @@ jobs:
           .nuget-packages
           Solutions
           ${{ inputs.additionalCachePaths }}
+      env:
+        # testing new multiple test logger support - will only affect repos using latest version of build module
+        BUILDVAR_DotNetTestLoggers: >
+          [
+            "GitHubActions",
+            "trx;logFileName=${{ github.workspace }}/test-results.trx"
+          ]
     - name: Code Coverage Report 1
       uses: 5monkeys/cobertura-action@master
       with:
