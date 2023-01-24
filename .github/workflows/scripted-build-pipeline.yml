@@ -79,12 +79,21 @@ jobs:
             "GitHubActions",
             "trx;logFileName=${{ github.workspace }}/test-results.trx"
           ]
+    - id: check_coverage
+      name: Check Code Coverage Output
+      run: |
+        if [ -f _codeCoverage/Cobertura.xml ]; then
+          echo "EXISTS=true" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
     - name: Store Code Coverage Artefacts
+      if: steps.check_coverage.outputs.EXISTS == 'true'
       uses: actions/upload-artifact@v3
       with:
         name: CoverageReport      
         path: _codeCoverage
     - name: Generate Code Coverage Summary Report
+      if: steps.check_coverage.outputs.EXISTS == 'true'
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
         filename: _codeCoverage/Cobertura.xml
@@ -97,6 +106,7 @@ jobs:
         output: both
         thresholds: '60 80'
     - name: Publish Code Coverage Summary Report
+      if: steps.check_coverage.outputs.EXISTS == 'true'
       uses: dtinth/markdown-report-action@v1
       with:
         name: Code Coverage
