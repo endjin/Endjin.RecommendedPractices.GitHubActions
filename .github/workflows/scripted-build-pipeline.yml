@@ -17,7 +17,7 @@ on:
         type: string
       configuration:
         description: The target build configuration.  
-        required: true
+        required: false
         default: 'Release'
         type: string
       forcePublish:
