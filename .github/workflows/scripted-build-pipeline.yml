@@ -15,6 +15,11 @@ on:
         required: false
         default: ''
         type: string
+      configuration:
+        description: The target build configuration.  
+        required: true
+        default: 'Release'
+        type: string
       forcePublish:
         description: When true, the Publish stage will be run regardless of the current branch or tag.
         required: false
@@ -47,6 +52,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Build,Analysis'
+        configuration: ${{ inputs.configuration }}
         outputCachePaths: |
           .nuget-packages
           Solutions
@@ -67,6 +73,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Test,TestReport'
+        configuration: ${{ inputs.configuration }}
         inputCachePaths: |
           .nuget-packages
           Solutions
@@ -134,6 +141,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Package'
+        configuration: ${{ inputs.configuration }}
         inputCachePaths: |
           .nuget-packages
           Solutions
