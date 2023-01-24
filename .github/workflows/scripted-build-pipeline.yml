@@ -56,6 +56,7 @@ jobs:
         outputCachePaths: |
           .nuget-packages
           Solutions
+          solutions
           ${{ inputs.additionalCachePaths }}
 
   test:
@@ -77,6 +78,7 @@ jobs:
         inputCachePaths: |
           .nuget-packages
           Solutions
+          solutions
           ${{ inputs.additionalCachePaths }}
       env:
         BUILDVAR_TestReportTypes: HtmlInline;Cobertura
@@ -145,6 +147,7 @@ jobs:
         inputCachePaths: |
           .nuget-packages
           Solutions
+          solutions
           ${{ inputs.additionalCachePaths }}
         outputCachePaths: |
           _packages
