@@ -90,6 +90,11 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - id: debugEnv
+      run: |
+        Write-Host 'JsonInput:`n${{ inputs.testPhaseEnv }}'
+        gci env:/ | fl | out-string | Write-Host
+      shell: pwsh
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
