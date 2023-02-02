@@ -21,8 +21,11 @@ runs:
   - id: prepareEnvVars
     name: Prepare Environment Variables
     run: |
-      # Write-Host "REQUIRED_ENV_VARS: ${{ inputs.environmentVariablesJson }}"
-      $json = ConvertFrom-Json '${{ inputs.environmentVariablesJson }}' -Depth 100 | ConvertTo-Json -Depth 100 -Compress
+      $srcEnvVars = @'
+      ${{ inputs.environmentVariablesJson }}
+      '@
+      Write-Host "REQUIRED_ENV_VARS: $srcEnvVars"
+      $json = ConvertFrom-Json $srcEnvVars -Depth 100 | ConvertTo-Json -Depth 100 -Compress
       Write-Host "json: $json"
       $jsonb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($json))
       Write-Host "jsonb64: $jsonb64"
@@ -32,8 +35,11 @@ runs:
   - id: prepareSecrets
     name: Prepare Secrets
     run: |
-      # Write-Host "REQUIRED_SECRETS: ${{ inputs.secretsJson }}"
-      $json = ConvertFrom-Json '${{ inputs.secretsJson }}' -Depth 100 | ConvertTo-Json -Depth 100 -Compress
+      $srcSecrets = @'
+      ${{ inputs.secretsJson }}
+      '@
+      Write-Host "REQUIRED_SECRETS: $srcSecrets"
+      $json = ConvertFrom-Json $srcSecrets -Depth 100 | ConvertTo-Json -Depth 100 -Compress
       Write-Host "json: $json"
       $jsonb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($json))
       Write-Host "jsonb64: $jsonb64"
