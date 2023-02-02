@@ -94,7 +94,7 @@ jobs:
         $envVarsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.testPhaseEnv }}"))
         $envVars = ConvertFrom-Json -Depth 100 -AsHashtable $envVarsJson
         $envVars.Keys | % {
-          Out-File -Append ("$_='{0}'" -f $envVars[$_]) $GITHUB_ENV
+          ("$_='{0}'" -f $envVars[$_]) | Out-File -Append -FilePath $GITHUB_ENV
         }        
       shell: pwsh
     - run: |
