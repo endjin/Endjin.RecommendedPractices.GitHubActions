@@ -28,7 +28,10 @@ on:
       testPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'test' stage of this workflow.
         required: false
-        default: '{}'
+        type: string
+      testPhaseSecrets:
+        description: A Base64-encoded JSON object representing the secrets required when running the 'test' stage of this workflow.
+        required: false
         type: string
       packagePhaseEnv:
         description: A JSON object representing the environment variables required when running the 'package' stage of this workflow.
@@ -89,18 +92,16 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - id: extractEnv
-      run: |
-        $envVarsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.testPhaseEnv }}"))
-        $envVars = ConvertFrom-Json -Depth 100 -AsHashtable $envVarsJson
-        $envVars.Keys | % {
-          ('{0}={1}' -f $_, $envVars[$_]) | Out-File -Append -FilePath $env:GITHUB_ENV
-        }        
-      shell: pwsh
+    
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/env-var-support
+      with: 
+        environmentVariablesJson: ${{ inputs.testPhaseEnv}}
+        secretsJsonBase64: ${{ inputs.testPhaseSecrets}}
     - run: |
         Get-Content -Raw $env:GITHUB_ENV
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
+
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
