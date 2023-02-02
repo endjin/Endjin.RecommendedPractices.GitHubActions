@@ -25,6 +25,10 @@ on:
         required: false
         default: '{}'
         type: string
+      compilePhaseSecrets:
+        description: A Base64-encoded JSON object representing the secrets required when running the 'copmile' stage of this workflow.
+        required: false
+        type: string        
       testPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'test' stage of this workflow.
         required: false
@@ -38,11 +42,19 @@ on:
         required: false
         default: '{}'
         type: string
+      packagePhaseSecrets:
+        description: A Base64-encoded JSON object representing the secrets required when running the 'package' stage of this workflow.
+        required: false
+        type: string        
       publishPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'publish' stage of this workflow.
         required: false
         default: '{}'
         type: string
+      publishPhaseSecrets:
+        description: A Base64-encoded JSON object representing the secrets required when running the 'publish' stage of this workflow.
+        required: false
+        type: string        
       forcePublish:
         description: When true, the Publish stage will be run regardless of the current branch or tag.
         required: false
@@ -58,7 +70,6 @@ jobs:
   compile:
     name: Compile & Analyse
     runs-on: ubuntu-latest
-    env: ${{ fromJson(inputs.compilePhaseEnv) }}
     outputs:
       semver: ${{ steps.run_compile.outputs.semver }}
       major: ${{ steps.run_compile.outputs.major }}
@@ -69,6 +80,15 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/env-var-support
+      with: 
+        environmentVariablesJsonBase64: ${{ inputs.compilePhaseEnv}}
+        secretsJsonBase64: ${{ inputs.compilePhaseSecrets}}
+    - name: Debug Variables
+      if: env.ACTIONS_RUNNER_DEBUG == 'true'
+      run: |
+        gci env:/ | fl | out-string | Write-Host
+      shell: pwsh
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_compile
       with:
@@ -92,16 +112,15 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/env-var-support
       with: 
         environmentVariablesJsonBase64: ${{ inputs.testPhaseEnv}}
         secretsJsonBase64: ${{ inputs.testPhaseSecrets}}
-    - run: |
-        Get-Content -Raw $env:GITHUB_ENV
+    - name: Debug Variables
+      if: env.ACTIONS_RUNNER_DEBUG == 'true'
+      run: |
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
-
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
@@ -167,11 +186,19 @@ jobs:
     - compile
     name: Package
     runs-on: ubuntu-latest
-    env: ${{ fromJson(inputs.packagePhaseEnv) }}
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/env-var-support
+      with: 
+        environmentVariablesJsonBase64: ${{ inputs.packagePhaseEnv}}
+        secretsJsonBase64: ${{ inputs.packagePhaseSecrets}}
+    - name: Debug Variables
+      if: env.ACTIONS_RUNNER_DEBUG == 'true'
+      run: |
+        gci env:/ | fl | out-string | Write-Host
+      shell: pwsh        
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Build Packages
@@ -196,11 +223,19 @@ jobs:
     name: Publish
     if: inputs.forcePublish || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    env: ${{ fromJson(inputs.publishPhaseEnv) }}
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/env-var-support
+      with: 
+        environmentVariablesJsonBase64: ${{ inputs.publishPhaseEnv}}
+        secretsJsonBase64: ${{ inputs.publishPhaseSecrets}}
+    - name: Debug Variables
+      if: env.ACTIONS_RUNNER_DEBUG == 'true'
+      run: |
+        gci env:/ | fl | out-string | Write-Host
+      shell: pwsh        
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
