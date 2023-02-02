@@ -98,6 +98,7 @@ jobs:
         }        
       shell: pwsh
     - run: |
+        Get-Content -Raw $env:GITHUB_ENV
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
