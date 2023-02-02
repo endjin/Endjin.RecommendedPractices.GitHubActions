@@ -8,10 +8,10 @@ inputs:
     description: A JSON object representing secrets that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
     default: '{}'
 outputs:
-  environmentVariablesJson:
-    description: JSON object representing environment variables that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
+  environmentVariablesJsonBase64:
+    description: Base64-encoded JSON object representing environment variables that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
     value: ${{ steps.prepareEnvVars.outputs.RESOLVED_ENV_VARS }}
-  secretsBase64:
+  secretsJsonBase64:
     description: Base64-encoded JSON object representing secrets that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
     value: ${{ steps.prepareSecrets.outputs.RESOLVED_SECRETS }}
 
@@ -24,7 +24,9 @@ runs:
       Write-Host "REQUIRED_ENV_VARS: ${{ inputs.environmentVariablesJson }}"
       $json = ConvertFrom-Json '${{ inputs.environmentVariablesJson }}' -Depth 100 | ConvertTo-Json -Depth 100 -Compress
       Write-Host "json: $json"
-      ("RESOLVED_ENV_VARS={0}" -f $json) | Out-File -Append $env:GITHUB_OUTPUT
+      $jsonb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($json))
+      Write-Host "jsonb64: $jsonb64"
+      ("RESOLVED_ENV_VARS={0}" -f $jsonb64) | Out-File -Append $env:GITHUB_OUTPUT
     shell: pwsh
 
   - id: prepareSecrets
