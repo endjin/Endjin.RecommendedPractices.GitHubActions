@@ -16,8 +16,8 @@ runs:
     run: |
       $envVarsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.environmentVariablesJsonBase64 }}"))
       $envVars = ConvertFrom-Json -Depth 100 -AsHashtable $envVarsJson
-      $envVars.Keys | % {
-        ('{0}={1}' -f $_, $envVars[$_]) | Out-File -Append -FilePath $env:GITHUB_ENV
+      foreach ($envVarName in $envVars.Keys) {
+        ('{0}={1}' -f $envVarName, $envVars[$envVarName]) | Out-File -Append -FilePath $env:GITHUB_ENV
       }        
     shell: pwsh
   - id: setSecrets
@@ -25,8 +25,8 @@ runs:
     run: |
       $secretsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.secretsJsonBase64 }}"))
       $secrets = ConvertFrom-Json -Depth 100 -AsHashtable $secretsJson
-      $secrets.Keys | % {
-        ('{0}={1}' -f $_, $secrets[$_]) | Out-File -Append -FilePath $env:GITHUB_ENV
-        Write-Host ("::add-mask::{0}" -f $secrets[$_])
+      foreach ($secretName in $secrets.Keys) {
+        ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
+        Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
       }        
     shell: pwsh
