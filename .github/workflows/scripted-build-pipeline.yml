@@ -23,7 +23,6 @@ on:
       compilePhaseEnv:
         description: A JSON object representing the environment variables required when running the 'compile' stage of this workflow.
         required: false
-        default: '{}'
         type: string
       compilePhaseSecrets:
         description: A Base64-encoded JSON object representing the secrets required when running the 'copmile' stage of this workflow.
@@ -40,7 +39,6 @@ on:
       packagePhaseEnv:
         description: A JSON object representing the environment variables required when running the 'package' stage of this workflow.
         required: false
-        default: '{}'
         type: string
       packagePhaseSecrets:
         description: A Base64-encoded JSON object representing the secrets required when running the 'package' stage of this workflow.
@@ -49,7 +47,6 @@ on:
       publishPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'publish' stage of this workflow.
         required: false
-        default: '{}'
         type: string
       publishPhaseSecrets:
         description: A Base64-encoded JSON object representing the secrets required when running the 'publish' stage of this workflow.
