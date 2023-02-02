@@ -85,14 +85,19 @@ jobs:
     - compile
     name: Test
     runs-on: ubuntu-latest
-    env: ${{ fromJson(inputs.testPhaseEnv) }}
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - id: debugEnv
+    - id: extractEnv
       run: |
-        Write-Host 'JsonInput:`n${{ inputs.testPhaseEnv }}'
+        $envVarsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.testPhaseEnv }}"))
+        $envVars = ConvertFrom-Json -Depth 100 -AsHashtable $envVarsJson
+        $envVars.Keys | % {
+          Out-File -Append ("$_='{0}'" -f $envVars[$_]) $GITHUB_ENV
+        }        
+      shell: pwsh
+    - run: |
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
