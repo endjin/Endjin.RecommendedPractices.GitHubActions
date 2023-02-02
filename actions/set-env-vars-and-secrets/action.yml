@@ -1,9 +1,9 @@
 name: 'Endjin.RecommendedPractices.Build.SetEnvVarsAndSecret'
 description: 'Injects environment variables and secrets passed as JSON-formatted strings'
 inputs:
-  environmentVariablesJson:
-    description: A JSON object representing environment variables that need to be set for the current job.
-    default: '{}'
+  environmentVariablesJsonBase64:
+    description: A Base64-encoded JSON object representing environment variables that need to be set for the current job.
+    default: 'ewB9AA=='   # '{}'
   secretsJsonBase64:
     description: A Base64-encoded JSON object representing secrets that need to be set for the current job.
     default: 'ewB9AA=='   # '{}'
@@ -14,7 +14,8 @@ runs:
   - id: setEnvironmentVariables
     name: Set Environment Variables
     run: |
-      $envVars = ConvertFrom-Json -Depth 100 -AsHashtable "${{ environmentVariablesJson }}"
+      $envVarsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.environmentVariablesJsonBase64 }}"))
+      $envVars = ConvertFrom-Json -Depth 100 -AsHashtable $envVarsJson
       $envVars.Keys | % {
         ('{0}={1}' -f $_, $envVars[$_]) | Out-File -Append -FilePath $env:GITHUB_ENV
       }        
