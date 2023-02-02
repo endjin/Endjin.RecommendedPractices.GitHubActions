@@ -95,7 +95,7 @@ jobs:
     
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/env-var-support
       with: 
-        environmentVariablesJson: ${{ inputs.testPhaseEnv}}
+        environmentVariablesJsonBase64: ${{ inputs.testPhaseEnv}}
         secretsJsonBase64: ${{ inputs.testPhaseSecrets}}
     - run: |
         Get-Content -Raw $env:GITHUB_ENV
