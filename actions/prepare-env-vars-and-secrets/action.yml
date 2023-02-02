@@ -1,0 +1,47 @@
+name: 'Endjin.RecommendedPractices.Build.SetEnvVarsAndSecret'
+description: 'Injects environment variables and secrets passed as JSON-formatted strings'
+inputs:
+  environmentVariablesJson:
+    description: A JSON object representing environment variables that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
+    default: '{}'
+  secretsJson:
+    description: A JSON object representing secrets that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
+    default: '{}'
+outputs:
+  environmentVariablesJsonBase64:
+    description: Base64-encoded JSON object representing environment variables that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
+    value: ${{ steps.prepareEnvVars.outputs.RESOLVED_ENV_VARS }}
+  secretsJsonBase64:
+    description: Base64-encoded JSON object representing secrets that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
+    value: ${{ steps.prepareSecrets.outputs.RESOLVED_SECRETS }}
+
+runs:
+  using: "composite"
+  steps:
+  - id: prepareEnvVars
+    name: Prepare Environment Variables
+    run: |
+      $srcEnvVars = @'
+      ${{ inputs.environmentVariablesJson }}
+      '@
+      Write-Host "REQUIRED_ENV_VARS: $srcEnvVars"
+      $json = ConvertFrom-Json $srcEnvVars -Depth 100 | ConvertTo-Json -Depth 100 -Compress
+      Write-Host "json: $json"
+      $jsonb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($json))
+      Write-Host "jsonb64: $jsonb64"
+      ("RESOLVED_ENV_VARS={0}" -f $jsonb64) | Out-File -Append $env:GITHUB_OUTPUT
+    shell: pwsh
+
+  - id: prepareSecrets
+    name: Prepare Secrets
+    run: |
+      $srcSecrets = @'
+      ${{ inputs.secretsJson }}
+      '@
+      Write-Host "REQUIRED_SECRETS: $srcSecrets"
+      $json = ConvertFrom-Json $srcSecrets -Depth 100 | ConvertTo-Json -Depth 100 -Compress
+      Write-Host "json: $json"
+      $jsonb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($json))
+      Write-Host "jsonb64: $jsonb64"
+      ("RESOLVED_SECRETS={0}" -f $jsonb64) | Out-File -Append $env:GITHUB_OUTPUT
+    shell: pwsh
