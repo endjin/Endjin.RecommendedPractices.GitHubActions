@@ -261,33 +261,6 @@ jobs:
     # We need to checkout the repo to get the branch information
     - name: Check out code
       uses: actions/checkout@v3
-    - name: Debug version output variables
-      run: |
-        echo "SemVer: ${{ needs.compile.outputs.semver }}"
-        echo "Major: ${{ needs.compile.outputs.major }}"
-        echo "MajorMinor: ${{ needs.compile.outputs.majorMinor }}"
-        echo "PreReleaseTag: ${{ needs.compile.outputs.preReleaseTag }}"
-      shell: bash
-    - name: Cleanup
-      run: |
-        & gh extension install actions/gh-actions-cache
-        
-        $cacheEntries = & gh actions-cache list -R endjin/dotnet-adr -B feature/gha-build |
-                          ConvertFrom-CSV -Header key,size,ref,time -Delimiter `t
-
-        $cachesToDelete = $cacheEntries |
-                            Where-Object { $_.key -eq "build-state-$($env:GITHUB_SHA)" -and $_.ref -eq $env:GITHUB_REF } |
-                            Select-Object -Unique
-
-        if (!$cachesToDelete) {
-            Write-Host "No caches to delete for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
-        }
-        else {
-            foreach ($cache in $cachesToDelete) {
-                Write-Host "Deleting cache: '$($cache.key)' for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
-                & gh actions-cache delete $cache.key -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF --confirm
-            }
-        }
-      shell: pwsh
-      env:
-        GH_TOKEN: ${{ github.token }}
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/remove-pipeline-state@main
+      with:
+        cacheKeyPrefix: build-state
