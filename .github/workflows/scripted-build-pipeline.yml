@@ -266,6 +266,8 @@ jobs:
     name: Cleanup
     if: always() && !inputs.skipCleanup
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
     # We need to checkout the repo to get the branch information
     - name: Check out code
