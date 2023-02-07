@@ -15,18 +15,18 @@ runs:
       # Check we have the required environment variables
       $requiredEnvVars = @(
         "$($env:GITHUB_SHA)"
-        "$($env:GITHUB_REF)"
+        "$($env:GITHUB_REF_NAME)"
         "$($env:GITHUB_REPOSITORY)"
       )
       if ("" -in $requiredEnvVars) {
-        Write-Error "This action requires GITHUB_SHA, GITHUB_REF and GITHUB_REPOSITORY to be defined - are you missing the 'checkout' action?"
+        Write-Error "This action requires GITHUB_SHA, GITHUB_REF_NAME and GITHUB_REPOSITORY to be defined - are you missing the 'checkout' action?"
       }
 
       # Install the non-default GH cli extension
       & gh extension install actions/gh-actions-cache
       
       # Find cache entries for the specified repo & branch, parsing the CSV output into an object
-      $cacheEntries = & gh actions-cache list -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF |
+      $cacheEntries = & gh actions-cache list -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF_NAME |
                         ConvertFrom-CSV -Header key,size,ref,time -Delimiter `t
 
       # Filter the cache entries that relate to the current commit/ref using our naming convention.
@@ -34,16 +34,16 @@ runs:
       # them all in a single operation, so we use '-Unique' to get a distinct set - given our usage this 
       # should always a single item.
       $cachesToDelete = $cacheEntries |
-                          Where-Object { $_.key -eq "$($env:PREFIX)-$($env:GITHUB_SHA)" -and $_.ref -eq $env:GITHUB_REF } |
+                          Where-Object { $_.key -eq "$($env:PREFIX)-$($env:GITHUB_SHA)" -and $_.ref -eq $env:GITHUB_REF_NAME } |
                           Select-Object -Unique
 
       if (!$cachesToDelete) {
-          Write-Host "No caches to delete for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
+          Write-Host "No caches to delete for branch '$($env:GITHUB_REF_NAME)' in repository '$($env:GITHUB_REPOSITORY)'"
       }
       else {
           foreach ($cache in $cachesToDelete) {
-              Write-Host "Deleting cache: '$($cache.key)' for branch '$($env:GITHUB_REF)' in repository '$($env:GITHUB_REPOSITORY)'"
-              & gh actions-cache delete $cache.key -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF --confirm
+              Write-Host "Deleting cache: '$($cache.key)' for branch '$($env:GITHUB_REF_NAME)' in repository '$($env:GITHUB_REPOSITORY)'"
+              & gh actions-cache delete $cache.key -R $env:GITHUB_REPOSITORY -B $env:GITHUB_REF_NAME --confirm
           }
       }
     shell: pwsh
