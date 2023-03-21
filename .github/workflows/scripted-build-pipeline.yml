@@ -63,6 +63,10 @@ on:
         default: false
         type: boolean
 
+    secrets:
+      compilePhaseAzureCredentials:
+        required: false
+
 jobs:
   compile:
     name: Compile & Analyse
@@ -86,6 +90,12 @@ jobs:
       run: |
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
+    - name: Azure CLI login
+      if: secrets.compilePhaseAzureCredentials != ''
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.compilePhaseAzureCredentials }}
+        enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_compile
       with:
