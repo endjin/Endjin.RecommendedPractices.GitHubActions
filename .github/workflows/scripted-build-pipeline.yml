@@ -90,8 +90,17 @@ jobs:
       run: |
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
+    - name: Check if compilePhaseAzureCredentials secret is set
+      id: compilePhaseAzureCredentials_secret_check
+      shell: bash
+      run: |
+        if [ "${{ secrets.compilePhaseAzureCredentials_secret_check }}" != '' ]; then
+          echo "available=true" >> $GITHUB_OUTPUT;
+        else
+          echo "available=false" >> $GITHUB_OUTPUT;
+        fi
     - name: Azure CLI login
-      if: secrets.compilePhaseAzureCredentials != ''
+      if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available != 'true' }}
       uses: azure/login@v1
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
