@@ -66,6 +66,10 @@ on:
     secrets:
       compilePhaseAzureCredentials:
         required: false
+      testPhaseAzureCredentials:
+        required: false
+      publishPhaseAzureCredentials:
+        required: false
 
 jobs:
   compile:
@@ -137,6 +141,21 @@ jobs:
       run: |
         gci env:/ | fl | out-string | Write-Host
       shell: pwsh
+    - name: Check if testPhaseAzureCredentials secret is set
+      id: testPhaseAzureCredentials_secret_check
+      shell: bash
+      run: |
+        if [ "${{ secrets.testPhaseAzureCredentials_secret_check }}" != '' ]; then
+          echo "available=true" >> $GITHUB_OUTPUT;
+        else
+          echo "available=false" >> $GITHUB_OUTPUT;
+        fi
+    - name: Azure CLI login
+      if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available != 'true' }}
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.testPhaseAzureCredentials }}
+        enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
@@ -254,7 +273,22 @@ jobs:
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
         gci env:/ | fl | out-string | Write-Host
-      shell: pwsh        
+      shell: pwsh    
+    - name: Check if publishPhaseAzureCredentials secret is set
+      id: publishPhaseAzureCredentials_secret_check
+      shell: bash
+      run: |
+        if [ "${{ secrets.publishPhaseAzureCredentials_secret_check }}" != '' ]; then
+          echo "available=true" >> $GITHUB_OUTPUT;
+        else
+          echo "available=false" >> $GITHUB_OUTPUT;
+        fi
+    - name: Azure CLI login
+      if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available != 'true' }}
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.publishPhaseAzureCredentials }}
+        enable-AzPSSession: true    
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
