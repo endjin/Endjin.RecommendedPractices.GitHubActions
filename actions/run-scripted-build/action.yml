@@ -31,6 +31,16 @@ inputs:
     description: The build configuration to use
     required: false
     default: 'Release'
+  artifactName:
+    description: If set, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
+    required: false
+    default: ''
+  artifactPath:
+    description: If set, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
+    required: false
+    default: ''
+  
+
 outputs:
   semver:
     description: "The full SemVer version number of the current build"
@@ -98,3 +108,10 @@ runs:
     with:
       path: ${{ inputs.outputCachePaths }}
       key: build-state-${{ github.sha }}
+
+  - name: Upload Artifact
+    uses: actions/upload-artifact@v3
+    if: ${{ inputs.artifactName != '' && inputs.artifactPath != '' }}
+    with:
+      name: ${{ inputs.artifactName }}
+      path: ${{ inputs.artifactPath }}
