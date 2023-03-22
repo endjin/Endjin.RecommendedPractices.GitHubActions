@@ -98,13 +98,13 @@ jobs:
       id: compilePhaseAzureCredentials_secret_check
       shell: bash
       run: |
-        if [ "${{ secrets.compilePhaseAzureCredentials_secret_check }}" != '' ]; then
+        if [ "${{ secrets.compilePhaseAzureCredentials }}" != '' ]; then
           echo "available=true" >> $GITHUB_OUTPUT;
         else
           echo "available=false" >> $GITHUB_OUTPUT;
         fi
     - name: Azure CLI login
-      if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available != 'true' }}
+      if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
       uses: azure/login@v1
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
@@ -145,13 +145,13 @@ jobs:
       id: testPhaseAzureCredentials_secret_check
       shell: bash
       run: |
-        if [ "${{ secrets.testPhaseAzureCredentials_secret_check }}" != '' ]; then
+        if [ "${{ secrets.testPhaseAzureCredentials }}" != '' ]; then
           echo "available=true" >> $GITHUB_OUTPUT;
         else
           echo "available=false" >> $GITHUB_OUTPUT;
         fi
     - name: Azure CLI login
-      if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available != 'true' }}
+      if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
       uses: azure/login@v1
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
@@ -278,13 +278,13 @@ jobs:
       id: publishPhaseAzureCredentials_secret_check
       shell: bash
       run: |
-        if [ "${{ secrets.publishPhaseAzureCredentials_secret_check }}" != '' ]; then
+        if [ "${{ secrets.publishPhaseAzureCredentials }}" != '' ]; then
           echo "available=true" >> $GITHUB_OUTPUT;
         else
           echo "available=false" >> $GITHUB_OUTPUT;
         fi
     - name: Azure CLI login
-      if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available != 'true' }}
+      if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
       uses: azure/login@v1
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
