@@ -111,7 +111,7 @@ runs:
 
   - name: Upload Artifact
     uses: actions/upload-artifact@v3
-    if: ${{ inputs.artifactName != '' && inputs.artifactPath != '' }}
+    if: inputs.artifactName != '' && inputs.artifactPath != ''
     with:
       name: ${{ inputs.artifactName }}
       path: ${{ inputs.artifactPath }}
