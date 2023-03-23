@@ -95,7 +95,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
       with: 
         environmentVariablesJsonBase64: ${{ inputs.compilePhaseEnv}}
         secretsJsonBase64: ${{ inputs.compilePhaseSecrets}}
@@ -119,7 +119,7 @@ jobs:
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_compile
       with:
         displayName: Compile & Analyse
@@ -142,7 +142,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
       with: 
         environmentVariablesJsonBase64: ${{ inputs.testPhaseEnv}}
         secretsJsonBase64: ${{ inputs.testPhaseSecrets}}
@@ -166,7 +166,7 @@ jobs:
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
         netSdkVersion: ${{ inputs.netSdkVersion }}
@@ -235,7 +235,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
       with: 
         environmentVariablesJsonBase64: ${{ inputs.packagePhaseEnv}}
         secretsJsonBase64: ${{ inputs.packagePhaseSecrets}}
@@ -259,7 +259,7 @@ jobs:
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Build Packages
         netSdkVersion: ${{ inputs.netSdkVersion }}
@@ -290,7 +290,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
       with: 
         environmentVariablesJsonBase64: ${{ inputs.publishPhaseEnv}}
         secretsJsonBase64: ${{ inputs.publishPhaseSecrets}}
@@ -314,7 +314,7 @@ jobs:
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
         netSdkVersion: ${{ inputs.netSdkVersion }}
@@ -341,6 +341,6 @@ jobs:
     # We need to checkout the repo to get the branch information
     - name: Check out code
       uses: actions/checkout@v3
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/remove-pipeline-state@feature/publish-gh-artifacts
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/remove-pipeline-state@main
       with:
         cacheKeyPrefix: build-state
