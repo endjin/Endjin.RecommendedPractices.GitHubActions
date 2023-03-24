@@ -51,7 +51,15 @@ on:
       publishPhaseSecrets:
         description: A Base64-encoded JSON object representing the secrets required when running the 'publish' stage of this workflow.
         required: false
-        type: string        
+        type: string    
+      publishArtifactName:
+        description: If set, during the publish phase, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
+        required: false
+        type: string  
+      publishArtifactPath:
+        description: If set, during the publish phase, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
+        required: false
+        type: string    
       forcePublish:
         description: When true, the Publish stage will be run regardless of the current branch or tag.
         required: false
@@ -315,6 +323,8 @@ jobs:
         inputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
+        artifactName: ${{ inputs.publishArtifactName }}
+        artifactPath: ${{ inputs.publishArtifactPath }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
