@@ -184,7 +184,7 @@ jobs:
         BUILDVAR_DotNetTestLoggers: >
           [
             "GitHubActions",
-            "trx;logFileName=${{ github.workspace }}/test-results.trx"
+            "trx;LogFilePrefix=test-results_"
           ]
     - id: check_coverage
       name: Check Code Coverage Output
@@ -223,8 +223,8 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       if: always()
       with:
-        nunit_files: "*TestResults.xml"   # produced by Pester
-        trx_files: "*.trx"                # produced by dotnet test
+        nunit_files: "*TestResults.xml"    # produced by Pester
+        trx_files: "**/test-results_*.trx" # produced by dotnet test
 
   package:
     needs:
