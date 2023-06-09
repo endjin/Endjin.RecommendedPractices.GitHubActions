@@ -10,6 +10,10 @@ on:
         description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
         required: false
         type: string
+      pythonVersion:
+        description: Specify an additional Python version required for the build process
+        required: false
+        type: string
       additionalCachePaths:
         description: Custom paths that need to be included in the multi-stage pipeline caching.
         required: false
@@ -127,12 +131,13 @@ jobs:
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/update-python-version
       id: run_compile
       with:
         displayName: Compile & Analyse
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        pythonVersion: ${{ inputs.pythonVersion }}
         tasks: 'Build,Analysis'
         configuration: ${{ inputs.configuration }}
         outputCachePaths: |

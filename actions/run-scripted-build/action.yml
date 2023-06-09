@@ -12,6 +12,9 @@ inputs:
   additionalNetSdkVersion:
     description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
     required: false
+  pythonVersion:
+    description: Specify an additional Python version required for the build process
+    required: false
   netSdkQuality:
     description: Allows pre-release versions of the .NET SDK to be installed, valid values are 'ga', 'preview', 'validated', 'signed' & 'daily' 
     required: false
@@ -70,6 +73,11 @@ runs:
     with:
       dotnet-version: '${{ inputs.additionalNetSdkVersion }}'
       dotnet-quality: '${{ inputs.netSdkQuality }}'
+
+  - uses: actions/setup-python@v4
+    if: ${{ inputs.pythonVersion }}
+    with:
+      python-version: '${{ inputs.pythonVersion }}'
 
   - name: Debug cache paths (before)
     run: |
