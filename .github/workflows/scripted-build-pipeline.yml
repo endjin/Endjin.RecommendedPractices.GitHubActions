@@ -145,6 +145,7 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+        customGitHubToken: ${{ secrets.CUSTOM_GITHUB_TOKEN}}
 
   test:
     needs:
