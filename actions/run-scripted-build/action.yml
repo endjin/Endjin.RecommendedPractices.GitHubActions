@@ -108,7 +108,7 @@ runs:
     env:
       GH_TOKEN: ${{ github.token }}
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
-      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      NUGET_API_KEY: ${{ env.NUGET_API_KEY }}
 
   - name: Save Cached Outputs
     id: cache_outputs_save
