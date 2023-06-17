@@ -341,9 +341,9 @@ jobs:
           ${{ inputs.additionalCachePaths }}
         artifactName: ${{ inputs.publishArtifactName }}
         artifactPath: ${{ inputs.publishArtifactPath }}
+        nugetApiKey: ${{ secrets.NUGET_API_KEY }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
   cleanup:
     needs:
