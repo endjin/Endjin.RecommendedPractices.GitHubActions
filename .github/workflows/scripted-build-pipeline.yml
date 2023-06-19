@@ -297,7 +297,7 @@ jobs:
     - test
     - package
     name: Publish
-    if: inputs.forcePublish || startsWith(github.ref, 'refs/tags/')
+    if: inputs.forcePublish || startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
