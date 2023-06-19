@@ -330,7 +330,7 @@ jobs:
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/fix-nuget-publish
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
         netSdkVersion: ${{ inputs.netSdkVersion }}
@@ -341,9 +341,9 @@ jobs:
           ${{ inputs.additionalCachePaths }}
         artifactName: ${{ inputs.publishArtifactName }}
         artifactPath: ${{ inputs.publishArtifactPath }}
-        nugetApiKey: ${{ secrets.NUGET_API_KEY }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NUGET_API_KEY: ${{ env.NUGET_API_KEY }}
 
   cleanup:
     needs:
