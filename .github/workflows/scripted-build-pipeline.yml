@@ -343,6 +343,7 @@ jobs:
         artifactPath: ${{ inputs.publishArtifactPath }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NUGET_API_KEY: ${{ env.NUGET_API_KEY }}
 
   cleanup:
     needs:
