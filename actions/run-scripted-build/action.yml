@@ -42,10 +42,6 @@ inputs:
     description: If set, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
     required: false
     default: ''
-  nugetApiKey:
-    description: The API key that will be used when publishing NuGet packages to a repository
-    required: false
-    default: ''
   
 
 outputs:
@@ -112,7 +108,6 @@ runs:
     env:
       GH_TOKEN: ${{ github.token }}
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
-      NUGET_API_KEY: ${{ inputs.nugetApiKey }}
 
   - name: Save Cached Outputs
     id: cache_outputs_save
