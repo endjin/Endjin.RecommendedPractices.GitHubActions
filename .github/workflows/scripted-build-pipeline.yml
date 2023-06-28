@@ -96,7 +96,7 @@ on:
 jobs:
   compile:
     name: Compile & Analyse
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       semver: ${{ steps.run_compile.outputs.semver }}
       major: ${{ steps.run_compile.outputs.major }}
