@@ -42,10 +42,6 @@ inputs:
     description: If set, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
     required: false
     default: ''
-  customGitHubToken:
-    description: If set, uses the specified GitHub token with the GitHub CLI 
-    required: false
-    default: ''
 
 outputs:
   semver:
@@ -109,8 +105,9 @@ runs:
                   -Configuration ${{ inputs.configuration }}
     shell: pwsh
     env:
-      GH_TOKEN: ${{ inputs.customGitHubToken != '' && inputs.customGitHubToken || github.token }}
+      GH_TOKEN: ${{ github.token }}
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
+      SBOM_ANALYSIS_RELEASE_READER_PAT: ${{ secrets.ENDJIN_GITHUB_READER_PAT }}
 
   - name: Save Cached Outputs
     id: cache_outputs_save
