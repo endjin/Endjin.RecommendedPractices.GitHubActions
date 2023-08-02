@@ -145,6 +145,7 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+        githubReaderPat: ${{ secrets.ENDJIN_GITHUB_READER_PAT }}
 
   test:
     needs:
