@@ -92,6 +92,9 @@ on:
         required: false
       publishPhaseAzureCredentials:
         required: false
+      githubReaderPat:
+        required: false
+
 
 jobs:
   compile:
@@ -145,7 +148,7 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
-        githubReaderPat: ${{ secrets.ENDJIN_GITHUB_READER_PAT }}
+        githubReaderPat: ${{ secrets.githubReaderPat }}
 
   test:
     needs:
