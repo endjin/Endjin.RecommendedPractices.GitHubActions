@@ -42,6 +42,10 @@ inputs:
     description: If set, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
     required: false
     default: ''
+  githubReaderPat:
+    description: If set, provides a GitHub PAT that has Organisation-level read permissions. This enables accessing packages and releases in other repositories.
+    required: false
+    default: ''
 
 outputs:
   semver:
@@ -107,7 +111,7 @@ runs:
     env:
       GH_TOKEN: ${{ github.token }}
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
-      SBOM_ANALYSIS_RELEASE_READER_PAT: ${{ secrets.ENDJIN_GITHUB_READER_PAT }}
+      SBOM_ANALYSIS_RELEASE_READER_PAT: ${{ inputs.githubReaderPat }}
 
   - name: Save Cached Outputs
     id: cache_outputs_save
