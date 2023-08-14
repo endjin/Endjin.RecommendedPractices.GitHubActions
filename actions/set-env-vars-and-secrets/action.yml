@@ -30,7 +30,7 @@ runs:
     run: |
       Import-Module Powershell-yaml
       $secretsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.secretsYamlBase64 }}"))
-      $secrets = ConvertFrom-Yaml -Depth 100 -AsHashtable $secretsYaml
+      $secrets = ConvertFrom-Yaml $secretsYaml
       foreach ($secretName in $secrets.Keys) {
         ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
         Write-Host ("::add-mask::{0}" -f $secrets[$secretName])

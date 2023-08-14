@@ -45,7 +45,7 @@ runs:
       ${{ inputs.secretsYaml }}
       '@
       Write-Host "REQUIRED_SECRETS: $srcSecrets"
-      $yaml = ConvertFrom-Yaml $srcSecrets -Depth 100 | ConvertTo-Yaml -Depth 100
+      $yaml = ConvertFrom-Yaml $srcSecrets | ConvertTo-Yaml
       Write-Host "yaml: $yaml"
       $yamlb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($yaml))
       Write-Host "yamlb64: $yamlb64"
