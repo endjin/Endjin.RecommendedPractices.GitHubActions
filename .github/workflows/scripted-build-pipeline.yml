@@ -28,16 +28,8 @@ on:
         description: A JSON object representing the environment variables required when running the 'compile' stage of this workflow.
         required: false
         type: string
-      compilePhaseSecrets:
-        description: A Base64-encoded JSON object representing the secrets required when running the 'copmile' stage of this workflow.
-        required: false
-        type: string        
       testPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'test' stage of this workflow.
-        required: false
-        type: string
-      testPhaseSecrets:
-        description: A Base64-encoded JSON object representing the secrets required when running the 'test' stage of this workflow.
         required: false
         type: string
       testArtifactName:
@@ -52,18 +44,10 @@ on:
         description: A JSON object representing the environment variables required when running the 'package' stage of this workflow.
         required: false
         type: string
-      packagePhaseSecrets:
-        description: A Base64-encoded JSON object representing the secrets required when running the 'package' stage of this workflow.
-        required: false
-        type: string        
       publishPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'publish' stage of this workflow.
         required: false
         type: string
-      publishPhaseSecrets:
-        description: A Base64-encoded JSON object representing the secrets required when running the 'publish' stage of this workflow.
-        required: false
-        type: string    
       publishArtifactName:
         description: If set, during the publish phase, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
         required: false
@@ -86,11 +70,23 @@ on:
     secrets:
       compilePhaseAzureCredentials:
         required: false
+      compilePhaseSecrets:
+        description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
+        required: false
       testPhaseAzureCredentials:
+        required: false
+      testPhaseSecrets:
+        description: A YAML string representing a dictionary of secrets required when running the 'test' stage of this workflow.
         required: false
       packagePhaseAzureCredentials:
         required: false
+      packagePhaseSecrets:
+        description: A YAML string representing a dictionary of secrets required when running the 'package' stage of this workflow.
+        required: false
       publishPhaseAzureCredentials:
+        required: false
+      publishPhaseSecrets:
+        description: A YAML string representing a dictionary of secrets required when running the 'publish' stage of this workflow.
         required: false
 
 jobs:
@@ -107,10 +103,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
         environmentVariablesJsonBase64: ${{ inputs.compilePhaseEnv}}
-        secretsJsonBase64: ${{ inputs.compilePhaseSecrets}}
+        secretsYamlBase64: ${{ secrets.compilePhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
@@ -155,10 +151,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
         environmentVariablesJsonBase64: ${{ inputs.testPhaseEnv}}
-        secretsJsonBase64: ${{ inputs.testPhaseSecrets}}
+        secretsYamlBase64: ${{ secrets.testPhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
@@ -251,10 +247,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
         environmentVariablesJsonBase64: ${{ inputs.packagePhaseEnv}}
-        secretsJsonBase64: ${{ inputs.packagePhaseSecrets}}
+        secretsYamlBase64: ${{ secrets.packagePhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
@@ -306,10 +302,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
         environmentVariablesJsonBase64: ${{ inputs.publishPhaseEnv}}
-        secretsJsonBase64: ${{ inputs.publishPhaseSecrets}}
+        secretsYamlBase64: ${{ secrets.publishPhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |

@@ -4,20 +4,25 @@ inputs:
   environmentVariablesJson:
     description: A JSON object representing environment variables that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
     default: '{}'
-  secretsJson:
-    description: A JSON object representing secrets that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
+  secretsYaml:
+    description: A YAML object representing secrets that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
     default: '{}'
 outputs:
   environmentVariablesJsonBase64:
     description: Base64-encoded JSON object representing environment variables that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
     value: ${{ steps.prepareEnvVars.outputs.RESOLVED_ENV_VARS }}
-  secretsJsonBase64:
-    description: Base64-encoded JSON object representing secrets that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
+  secretsYamlBase64:
+    description: Base64-encoded YAML object representing secrets that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
     value: ${{ steps.prepareSecrets.outputs.RESOLVED_SECRETS }}
 
 runs:
   using: "composite"
   steps:
+  - id: installPsYaml
+    name: Install PowerShell YAML module
+    run: |
+      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+    shell: pwsh 
   - id: prepareEnvVars
     name: Prepare Environment Variables
     run: |
@@ -35,13 +40,14 @@ runs:
   - id: prepareSecrets
     name: Prepare Secrets
     run: |
+      Import-Module Powershell-yaml
       $srcSecrets = @'
-      ${{ inputs.secretsJson }}
+      ${{ inputs.secretsYaml }}
       '@
       Write-Host "REQUIRED_SECRETS: $srcSecrets"
-      $json = ConvertFrom-Json $srcSecrets -Depth 100 | ConvertTo-Json -Depth 100 -Compress
-      Write-Host "json: $json"
-      $jsonb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($json))
-      Write-Host "jsonb64: $jsonb64"
-      ("RESOLVED_SECRETS={0}" -f $jsonb64) | Out-File -Append $env:GITHUB_OUTPUT
+      $yaml = ConvertFrom-Yaml $srcSecrets -Depth 100 | ConvertTo-Yaml -Depth 100
+      Write-Host "yaml: $yaml"
+      $yamlb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($yaml))
+      Write-Host "yamlb64: $yamlb64"
+      ("RESOLVED_SECRETS={0}" -f $yamlb64) | Out-File -Append $env:GITHUB_OUTPUT
     shell: pwsh

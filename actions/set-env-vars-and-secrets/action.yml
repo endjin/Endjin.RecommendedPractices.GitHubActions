@@ -4,13 +4,18 @@ inputs:
   environmentVariablesJsonBase64:
     description: A Base64-encoded JSON object representing environment variables that need to be set for the current job.
     default: 'ewB9AA=='   # '{}'
-  secretsJsonBase64:
-    description: A Base64-encoded JSON object representing secrets that need to be set for the current job.
+  secretsYamlBase64:
+    description: A Base64-encoded YAML object representing secrets that need to be set for the current job.
     default: 'ewB9AA=='   # '{}'
 
 runs:
   using: "composite"
   steps:
+  - id: installPsYaml
+    name: Install PowerShell YAML module
+    run: |
+      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+    shell: pwsh   
   - id: setEnvironmentVariables
     name: Set Environment Variables
     run: |
@@ -18,15 +23,16 @@ runs:
       $envVars = ConvertFrom-Json -Depth 100 -AsHashtable $envVarsJson
       foreach ($envVarName in $envVars.Keys) {
         ('{0}={1}' -f $envVarName, $envVars[$envVarName]) | Out-File -Append -FilePath $env:GITHUB_ENV
-      }        
+      }
     shell: pwsh
   - id: setSecrets
     name: Set Secrets
     run: |
-      $secretsJson = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.secretsJsonBase64 }}"))
-      $secrets = ConvertFrom-Json -Depth 100 -AsHashtable $secretsJson
+      Import-Module Powershell-yaml
+      $secretsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.secretsYamlBase64 }}"))
+      $secrets = ConvertFrom-Yaml -Depth 100 -AsHashtable $secretsYaml
       foreach ($secretName in $secrets.Keys) {
         ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
         Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
-      }        
+      }
     shell: pwsh
