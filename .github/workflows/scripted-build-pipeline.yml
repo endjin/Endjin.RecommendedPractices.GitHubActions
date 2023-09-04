@@ -105,7 +105,7 @@ jobs:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
-        environmentVariablesJsonBase64: ${{ inputs.compilePhaseEnv}}
+        environmentVariablesYamlBase64: ${{ inputs.compilePhaseEnv}}
         secretsYamlBase64: ${{ secrets.compilePhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
@@ -153,7 +153,7 @@ jobs:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
-        environmentVariablesJsonBase64: ${{ inputs.testPhaseEnv}}
+        environmentVariablesYamlBase64: ${{ inputs.testPhaseEnv}}
         secretsYamlBase64: ${{ secrets.testPhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
@@ -249,7 +249,7 @@ jobs:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
-        environmentVariablesJsonBase64: ${{ inputs.packagePhaseEnv}}
+        environmentVariablesYamlBase64: ${{ inputs.packagePhaseEnv}}
         secretsYamlBase64: ${{ secrets.packagePhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
@@ -304,7 +304,7 @@ jobs:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/refactor-custom-secrets
       with: 
-        environmentVariablesJsonBase64: ${{ inputs.publishPhaseEnv}}
+        environmentVariablesYamlBase64: ${{ inputs.publishPhaseEnv}}
         secretsYamlBase64: ${{ secrets.publishPhaseSecrets}}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
