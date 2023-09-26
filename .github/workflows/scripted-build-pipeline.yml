@@ -340,20 +340,3 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NUGET_API_KEY: ${{ env.NUGET_API_KEY }}
-
-  cleanup:
-    needs:
-    - compile
-    - test
-    - package
-    - publish
-    name: Cleanup
-    if: always() && !inputs.skipCleanup
-    runs-on: ubuntu-latest
-    steps:
-    # We need to checkout the repo to get the branch information
-    - name: Check out code
-      uses: actions/checkout@v3
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/remove-pipeline-state@main
-      with:
-        cacheKeyPrefix: build-state
