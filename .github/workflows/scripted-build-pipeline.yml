@@ -141,6 +141,19 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+      env:
+        BUILDVAR_AnalysisOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME}}
+        BUILDVAR_AnalysisOutputContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME}}
+        BUILDVAR_AnalysisOutputBlobPath: ${{ vars.SBOM_OUTPUT_STORAGE_BLOB_BASE_PATH }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
+        BUILDVAR_PublishCovenantOutputToStorage: true
+        BUILDVAR_CovenantMetadata: >
+          {
+            "git_provider": "github",
+            "git_org": "${{ github.repository_owner }}",
+            "git_repo": "${{ github.event.repository.name }}",
+            "git_branch": "${{ github.ref_name }}", 
+            "git_sha": "${{ github.sha }}"
+          }
 
   test:
     needs:
