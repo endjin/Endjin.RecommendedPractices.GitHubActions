@@ -141,6 +141,8 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+      env:
+        BUILDVAR_PublishCovenantOutputToStorage: true
 
   test:
     needs:
