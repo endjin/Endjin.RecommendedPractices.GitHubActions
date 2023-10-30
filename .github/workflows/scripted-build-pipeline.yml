@@ -142,7 +142,18 @@ jobs:
           solutions
           ${{ inputs.additionalCachePaths }}
       env:
+        BUILDVAR_AnalysisOutputStorageAccountName: endsynapsedatalake
+        BUILDVAR_AnalysisOutputContainerName: data
+        BUILDVAR_AnalysisOutputBlobPath: openchain/covenant/raw/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
         BUILDVAR_PublishCovenantOutputToStorage: true
+        BUILDVAR_CovenantMetadata: >
+          {
+            "git_provider": "github",
+            "git_org": "${{ github.repository_owner }}",
+            "git_repo": "${{ github.event.repository.name }}",
+            "git_branch": "${{ github.ref_name }}", 
+            "git_sha": "${{ github.sha }}"
+          }
 
   test:
     needs:
