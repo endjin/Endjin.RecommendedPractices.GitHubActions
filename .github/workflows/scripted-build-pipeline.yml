@@ -226,7 +226,7 @@ jobs:
           Write-Host "Checking for code coverage file: $coverageFile"
           if (Test-Path $coverageFile) {
             Write-Host "Code coverage file exists"
-            echo "EXISTS=true" >> $GITHUB_OUTPUT
+            echo "EXISTS=true" >> $env:GITHUB_OUTPUT
           }
         }
         catch {}
