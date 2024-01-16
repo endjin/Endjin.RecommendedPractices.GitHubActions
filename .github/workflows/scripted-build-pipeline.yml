@@ -89,6 +89,12 @@ on:
         description: A YAML string representing a dictionary of secrets required when running the 'publish' stage of this workflow.
         required: false
 
+env:
+  CODE_COVERAGE_RESULTS_DIR: ${{ vars.BUILD_CODE_COVERAGE_RESULTS_DIR || '_codeCoverage' }}
+  CODE_COVERAGE_RESULTS_FILE: ${{ vars.BUILD_CODE_COVERAGE_RESULTS_FILE || 'Cobertura.xml' }}
+  CODE_COVERAGE_LOWER_THRESHOLD: ${{ vars.BUILD_CODE_COVERAGE_LOWER_THRESHOLD || 60 }}
+  CODE_COVERAGE_UPPER_THRESHOLD: ${{ vars.BUILD_CODE_COVERAGE_UPPER_THRESHOLD || 80 }}
+
 jobs:
   compile:
     name: Compile & Analyse
@@ -212,22 +218,30 @@ jobs:
           ]
     - id: check_coverage
       name: Check Code Coverage Output
+      if: always()
       run: |
-        if [ -f _codeCoverage/Cobertura.xml ]; then
-          echo "EXISTS=true" >> $GITHUB_OUTPUT
-        fi
-      shell: bash
+        # check if the code coverage file exists, but ensure the build doesn't fail if it can't be found
+        try {
+          $coverageFile = Join-Path $env:CODE_COVERAGE_RESULTS_DIR $env:CODE_COVERAGE_RESULTS_FILE
+          Write-Host "Checking for code coverage file: $coverageFile"
+          if (Test-Path $coverageFile) {
+            Write-Host "Code coverage file exists"
+            echo "EXISTS=true" >> $env:GITHUB_OUTPUT
+          }
+        }
+        catch {}
+      shell: pwsh
     - name: Store Code Coverage Artefacts
-      if: steps.check_coverage.outputs.EXISTS == 'true'
+      if: always() && steps.check_coverage.outputs.EXISTS == 'true'
       uses: actions/upload-artifact@v3
       with:
         name: CoverageReport      
         path: _codeCoverage
     - name: Generate Code Coverage Summary Report
-      if: steps.check_coverage.outputs.EXISTS == 'true'
+      if: always() && steps.check_coverage.outputs.EXISTS == 'true'
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
-        filename: _codeCoverage/Cobertura.xml
+        filename: ${{ env.CODE_COVERAGE_RESULTS_DIR }}/${{ env.CODE_COVERAGE_RESULTS_FILE }}
         badge: true
         fail_below_min: false
         format: markdown
@@ -235,9 +249,9 @@ jobs:
         hide_complexity: false
         indicators: true
         output: both
-        thresholds: '60 80'
+        thresholds: '${{ env.CODE_COVERAGE_LOWER_THRESHOLD }} ${{ env.CODE_COVERAGE_UPPER_THRESHOLD }}'
     - name: Publish Code Coverage Summary Report
-      if: steps.check_coverage.outputs.EXISTS == 'true'
+      if: always() && steps.check_coverage.outputs.EXISTS == 'true'
       uses: dtinth/markdown-report-action@v1
       with:
         name: Code Coverage
@@ -249,7 +263,7 @@ jobs:
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
-        junit_files: "**/*pytest-results.xml"
+        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
 
   package:
     needs:
