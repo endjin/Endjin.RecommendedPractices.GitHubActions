@@ -263,7 +263,7 @@ jobs:
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
-        junit_files: "**/*pytest-results.xml"
+        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
 
   package:
     needs:
