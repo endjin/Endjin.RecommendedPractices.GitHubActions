@@ -42,6 +42,10 @@ inputs:
     description: If set, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
     required: false
     default: ''
+  buildScriptPath:
+    description: The path to the build script to run.
+    required: false
+    default: './build.ps1'
   
 
 outputs:
@@ -102,7 +106,7 @@ runs:
     name: ${{ inputs.displayName }}
     run: |
       $tasks = "${{ inputs.tasks }}" -split ","
-      ./build.ps1 -Tasks $tasks `
+      ${{ inputs.buildScriptPath }} -Tasks $tasks `
                   -Configuration ${{ inputs.configuration }}
     shell: pwsh
     env:

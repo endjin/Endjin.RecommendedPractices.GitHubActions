@@ -66,6 +66,11 @@ on:
         required: false
         default: false
         type: boolean
+      buildScriptPath:
+          description: The path to the build script to run.
+          required: false
+          default: ./build.ps1
+          type: string
 
     secrets:
       compilePhaseAzureCredentials:
@@ -133,10 +138,11 @@ jobs:
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
       id: run_compile
       with:
         displayName: Compile & Analyse
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         pythonVersion: ${{ inputs.pythonVersion }}
@@ -194,9 +200,10 @@ jobs:
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
       with:
         displayName: Run Tests
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Test,TestReport'
@@ -298,9 +305,10 @@ jobs:
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
       with:
         displayName: Build Packages
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Package'
@@ -353,9 +361,10 @@ jobs:
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
       with:
         displayName: Publish Packages
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Publish'
