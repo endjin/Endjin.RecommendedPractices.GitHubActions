@@ -66,6 +66,11 @@ on:
         required: false
         default: false
         type: boolean
+      buildScriptPath:
+          description: The path to the build script to run.
+          required: false
+          default: ./build.ps1
+          type: string
 
     secrets:
       compilePhaseAzureCredentials:
@@ -106,7 +111,7 @@ jobs:
       preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -129,7 +134,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@v1
+      uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -137,6 +142,7 @@ jobs:
       id: run_compile
       with:
         displayName: Compile & Analyse
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         pythonVersion: ${{ inputs.pythonVersion }}
@@ -167,7 +173,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -190,13 +196,14 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@v1
+      uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Test,TestReport'
@@ -233,13 +240,13 @@ jobs:
       shell: pwsh
     - name: Store Code Coverage Artefacts
       if: always() && steps.check_coverage.outputs.EXISTS == 'true'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8    # v4.3.0
       with:
         name: CoverageReport      
         path: _codeCoverage
     - name: Generate Code Coverage Summary Report
       if: always() && steps.check_coverage.outputs.EXISTS == 'true'
-      uses: irongut/CodeCoverageSummary@v1.3.0
+      uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95    # v1.3.0
       with:
         filename: ${{ env.CODE_COVERAGE_RESULTS_DIR }}/${{ env.CODE_COVERAGE_RESULTS_FILE }}
         badge: true
@@ -252,13 +259,13 @@ jobs:
         thresholds: '${{ env.CODE_COVERAGE_LOWER_THRESHOLD }} ${{ env.CODE_COVERAGE_UPPER_THRESHOLD }}'
     - name: Publish Code Coverage Summary Report
       if: always() && steps.check_coverage.outputs.EXISTS == 'true'
-      uses: dtinth/markdown-report-action@v1
+      uses: dtinth/markdown-report-action@af8143d37cced4c514fd67539a2e58c2f432da09    # v1.0.0
       with:
         name: Code Coverage
         title: Code Coverage Report
         body-file: code-coverage-results.md
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@e780361cd1fc1b1a170624547b3ffda64787d365   # v2.12.0
       if: always()
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
@@ -271,7 +278,7 @@ jobs:
     name: Package
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -294,13 +301,14 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.packagePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@v1
+      uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Build Packages
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Package'
@@ -326,7 +334,7 @@ jobs:
       contents: write
       packages: write
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   #v4.1.1
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -349,13 +357,14 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@v1
+      uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
+        buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Publish'

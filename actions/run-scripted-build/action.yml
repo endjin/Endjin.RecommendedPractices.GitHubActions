@@ -42,6 +42,10 @@ inputs:
     description: If set, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
     required: false
     default: ''
+  buildScriptPath:
+    description: The path to the build script to run.
+    required: false
+    default: './build.ps1'
   
 
 outputs:
@@ -61,20 +65,20 @@ outputs:
 runs:
   using: "composite"
   steps:
-  - uses: actions/setup-dotnet@v3
+  - uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3   # v4.0.0
     name: Install .NET Core SDK ${{ inputs.netSdkVersion }}
     with:
       dotnet-version: '${{ inputs.netSdkVersion }}'
       dotnet-quality: '${{ inputs.netSdkQuality }}'
   
-  - uses: actions/setup-dotnet@v3
+  - uses: actions/setup-dotnet@4d6c8fcf3c8f7a60068d26b594648e99df24cee3   # v4.0.0
     if: ${{ inputs.additionalNetSdkVersion }}
     name: Install .NET Core SDK ${{ inputs.additionalNetSdkVersion }}
     with:
       dotnet-version: '${{ inputs.additionalNetSdkVersion }}'
       dotnet-quality: '${{ inputs.netSdkQuality }}'
 
-  - uses: actions/setup-python@v4
+  - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c   # v5.0.0
     if: ${{ inputs.pythonVersion }}
     with:
       python-version: '${{ inputs.pythonVersion }}'
@@ -88,7 +92,7 @@ runs:
   - name: Restore Cached Inputs
     if: inputs.inputCachePaths != ''
     id: cache_inputs_restore
-    uses: actions/cache/restore@v3
+    uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
     with:
       path: ${{ inputs.inputCachePaths }}
       key: build-state-${{ github.sha }}
@@ -102,7 +106,7 @@ runs:
     name: ${{ inputs.displayName }}
     run: |
       $tasks = "${{ inputs.tasks }}" -split ","
-      ./build.ps1 -Tasks $tasks `
+      ${{ inputs.buildScriptPath }} -Tasks $tasks `
                   -Configuration ${{ inputs.configuration }}
     shell: pwsh
     env:
@@ -112,13 +116,13 @@ runs:
   - name: Save Cached Outputs
     id: cache_outputs_save
     if: inputs.outputCachePaths
-    uses: actions/cache/save@v3
+    uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
     with:
       path: ${{ inputs.outputCachePaths }}
       key: build-state-${{ github.sha }}
 
   - name: Upload Artifact
-    uses: actions/upload-artifact@v3
+    uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8    # v4.3.0
     if: ${{ always() && inputs.artifactName != '' && inputs.artifactPath != '' }}
     with:
       name: ${{ inputs.artifactName }}
