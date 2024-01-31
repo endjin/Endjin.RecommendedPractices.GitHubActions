@@ -138,7 +138,7 @@ jobs:
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_compile
       with:
         displayName: Compile & Analyse
@@ -200,7 +200,7 @@ jobs:
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Run Tests
         buildScriptPath: ${{ inputs.buildScriptPath }}
@@ -305,7 +305,7 @@ jobs:
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Build Packages
         buildScriptPath: ${{ inputs.buildScriptPath }}
@@ -361,7 +361,7 @@ jobs:
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-custom-build-script-support
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       with:
         displayName: Publish Packages
         buildScriptPath: ${{ inputs.buildScriptPath }}
