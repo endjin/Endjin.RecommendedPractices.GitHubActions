@@ -1,0 +1,203 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  workflow_call:
+    inputs:
+      azureClientId:
+        description: 'The Azure Client ID for authenticating with Azure via GitHub Federated Identity'
+        required: true
+        type: string
+      azureTenantId:
+        description: 'The Azure Tenant ID for authenticating with Azure'
+        required: true
+        type: string
+      azureSubscriptionId:
+        description: 'The Azure Subscription ID of the Azure Static Web App'
+        required: true
+        type: string
+      environment:
+        description: 'The environment to deploy to'
+        required: true
+        type: string
+      githubVellumPat:
+        description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
+        required: true
+        type: string
+      swaApiToken:
+        description: 'The API token for the Azure Static Web App'
+        required: true
+        type: string
+      swaResourceGroupName:
+        description: 'The name of the resource group for the Azure Static Web App'
+        required: true
+        type: string
+      swaSiteName:
+        description: 'The name of the Azure Static Web App'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  actions: write
+
+env:
+  VELLUM_CULTURE: en-GB
+
+jobs:
+  build:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Build Web Site
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+
+      - name: Get cached NPM modules
+        id: cache_npm_dependencies
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
+        with:
+          path: |
+            .github/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('.github/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Build
+        id: build
+        run: |
+          if ($env:GITHUB_REF -eq "refs/heads/main") {
+            $env:BUILDVAR_RebuildSearchIndex = "True"
+          }
+
+          & ./build.ps1 -Verbose
+        shell: pwsh
+        env:
+          GH_TOKEN : ${{ inputs.githubVellumPat }}
+          NPM_CACHE_HIT: ${{ steps.cache_npm_dependencies.outputs.cache-hit }}
+
+      - run: |
+          zip -r website.zip ${{ github.workspace }}/.dist
+        name: Zip generated web site
+      - name: Store generated web site
+        id: cache_site
+        uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
+        with:
+          path: website.zip
+          key: website-${{ github.sha }}
+
+
+  deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    name: Deploy Web Site
+    needs: build
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Retrieve generated web site
+        id: restore_cached_site
+        uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
+        with:
+          path: website.zip
+          key: website-${{ github.sha }}
+      - run: |
+          unzip website.zip
+          mv home/runner/work/intro-to-rx-site/intro-to-rx-site/.dist website
+        name: Unzip web site artefact
+        working-directory: ${{ github.workspace }}
+
+      - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
+        with:
+          client-id: ${{ inputs.azureClientId }}
+          tenant-id: ${{ inputs.azureTenantId }}
+          subscription-id: ${{ inputs.azureSubscriptionId }}
+          enable-AzPSSession: true
+
+      - name: 'Check existing preview sites'
+        uses: azure/powershell@v1
+        with:
+          inlineScript: |
+            # Lookup the web site name from the infra config
+            $webSiteName = "${{ inputs.swaSiteName }}"
+            $resourceGroupName = "${{ inputs.swaResourceGroupName }}"
+            Write-Host "Target Web Site: RG='${{ inputs.swaResourceGroupName }}' | Name='${{ inputs.swaSiteName }}'" -f Green
+
+            $sites = Get-AzStaticWebAppBuild -Name "${{ inputs.swaSiteName }}" `
+                                             -ResourceGroupName "${{ inputs.swaResourceGroupName }}" `
+                                             -SubscriptionId "${{ inputs.azureSubscriptionId }}"
+
+            # Current limits: 1 x Production & 10 x Preview sites
+            #
+            # To avoid errors when trying to deploy more than the limit of preview sites, we check
+            # how many we have and delete the oldest one if we are already at the limit.
+
+            if ($sites.Count -eq 11) {
+              Write-Host "Maximum number of preview sites are already active"
+              $oldest = $sites |
+                          Where-Object { $_.name -ne "default" } |
+                          Sort-Object LastUpdatedOn |
+                          Select-Object -First 1
+              
+              if ($oldest) {
+                Write-Host ("::notice title=Maximum number of preview sites are already active::Deleting least recently updated preview: {0} - {1}" -f $oldest.BuildId, $oldest.PullRequestTitle)
+                try {
+                  Remove-AzStaticWebAppBuild -EnvironmentName $oldest.Name `
+                                             -Name "${{ inputs.swaSiteName }}" `
+                                             -ResourceGroupName "${{ inputs.swaResourceGroupName }}" `
+                                             -SubscriptionId "${{ inputs.azureSubscriptionId }}"
+                }
+                catch {
+                  Write-Host ("::warning ::Unable to purge the least recently updated preview - the deployment may fail:`n{0}" -f $_.Exception.Message)
+                }
+              }
+              else {
+                Write-Host ("::warning title=Maximum number of preview sites are already active::Unable to derive the least recently updated preview for purging - the deployment may fail")
+              }
+            }
+            else {
+              Write-Host ("{0} previews active, no need to purge" -f $sites.Count)
+            }
+          azPSVersion: "latest"
+
+      - name: Deploy
+        id: deploy
+        uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
+        with:
+          # ref: https://aka.ms/swaworkflowconfig
+          azure_static_web_apps_api_token: ${{ inputs.swaApiToken }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          action: upload
+          app_location: website
+          skip_app_build: true
+          skip_api_build: true
+          production_branch: main
+
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
+        with:
+          azure_static_web_apps_api_token: ${{ inputs.swaApiToken }}
+          action: "close"
+
+
+  cleardown:
+    if: always() && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed') || github.event_name == 'workflow_dispatch')
+    needs:
+    - build
+    - deploy
+    runs-on: ubuntu-latest
+    name: Cleardown
+    steps:
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/remove-pipeline-state@main
+      name: Clear pipeline state
+      with:
+        cacheKeyPrefix: website
