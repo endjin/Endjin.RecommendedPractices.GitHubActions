@@ -1,0 +1,113 @@
+name: 'Endjin.RecommendedPractices.Deploy.Vellum'
+description: 'Runs the standardised deployment process for Vellum-based Azure static web app'
+inputs:
+  azureClientId:
+    description: 'The Azure Client ID for authenticating with Azure via GitHub Federated Identity'
+    required: true
+  azureTenantId:
+    description: 'The Azure Tenant ID for authenticating with Azure'
+    required: true
+  azureSubscriptionId:
+    description: 'The Azure Subscription ID of the Azure Static Web App'
+    required: true
+  swaApiToken:
+    required: true
+    description: 'The API token for the Azure Static Web App'
+  swaResourceGroupName:
+    description: 'The name of the resource group for the Azure Static Web App'
+    required: true
+  swaSiteName:
+    description: 'The name of the Azure Static Web App'
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+  - name: Retrieve generated web site
+    id: restore_cached_site
+    uses: actions/cache/restore@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
+    with:
+      path: website.zip
+      key: website-${{ github.sha }}
+  
+  - run: |
+      unzip website.zip
+      # The zip contains the full folder structure of the original source, so the extracted files
+      # are several layers deep. We need to move the '.dist' folder into the 'website' folder as
+      # this is where it is expected to be.
+      mv home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/.dist website
+
+      echo "*** DEBUG ***"
+      echo "azureClientId: '${{ inputs.azureClientId }}'"
+      echo "azureTenantId: '${{ inputs.azureTenantId }}'"
+      echo "azureSubscriptionId: '${{ inputs.azureSubscriptionId }}'"
+    name: Unzip web site artefact
+    working-directory: ${{ github.workspace }}
+    shell: bash
+
+  - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
+    with:
+      client-id: ${{ inputs.azureClientId }}
+      tenant-id: ${{ inputs.azureTenantId }}
+      subscription-id: ${{ inputs.azureSubscriptionId }}
+      enable-AzPSSession: true
+
+  - name: 'Check existing preview sites'
+    uses: azure/powershell@1300bbd2b3e1c21c029fe34887d16d2809a1397f   # v1.4.0
+    with:
+      inlineScript: |
+        # Lookup the web site name from provided configuration
+        $webSiteName = "${{ inputs.swaSiteName }}"
+        $resourceGroupName = "${{ inputs.swaResourceGroupName }}"
+        Write-Host "Target Web Site: RG='${{ inputs.swaResourceGroupName }}' | Name='${{ inputs.swaSiteName }}'" -f Green
+
+        $sites = Get-AzStaticWebAppBuild -Name "${{ inputs.swaSiteName }}" `
+                                          -ResourceGroupName "${{ inputs.swaResourceGroupName }}" `
+                                          -SubscriptionId "${{ inputs.azureSubscriptionId }}"
+
+        # Current limits: 1 x Production & 10 x Preview sites
+        #
+        # To avoid errors when trying to deploy more than the limit of preview sites, we check
+        # how many we have and delete the oldest one if we are already at the limit.
+
+        if ($sites.Count -eq 11) {
+          Write-Host "Maximum number of preview sites are already active"
+          $oldest = $sites |
+                      Where-Object { $_.name -ne "default" } |
+                      Sort-Object LastUpdatedOn |
+                      Select-Object -First 1
+          
+          if ($oldest) {
+            Write-Host ("::notice title=Maximum number of preview sites are already active::Deleting least recently updated preview: {0} - {1}" -f $oldest.BuildId, $oldest.PullRequestTitle)
+            try {
+              Remove-AzStaticWebAppBuild -EnvironmentName $oldest.Name `
+                                          -Name "${{ inputs.swaSiteName }}" `
+                                          -ResourceGroupName "${{ inputs.swaResourceGroupName }}" `
+                                          -SubscriptionId "${{ inputs.azureSubscriptionId }}"
+            }
+            catch {
+              Write-Host ("::warning ::Unable to purge the least recently updated preview - the deployment may fail:`n{0}" -f $_.Exception.Message)
+            }
+          }
+          else {
+            Write-Host ("::warning title=Maximum number of preview sites are already active::Unable to derive the least recently updated preview for purging - the deployment may fail")
+          }
+        }
+        else {
+          Write-Host ("{0} previews active, no need to purge" -f $sites.Count)
+        }
+      azPSVersion: "latest"
+
+  - name: Deploy
+    id: deploy
+    uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
+    with:
+      # ref: https://aka.ms/swaworkflowconfig
+      azure_static_web_apps_api_token: ${{ inputs.swaApiToken }}
+      repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+      action: upload
+      app_location: website
+      skip_app_build: true
+      skip_api_build: true
+      production_branch: main
