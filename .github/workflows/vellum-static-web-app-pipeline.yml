@@ -23,10 +23,6 @@ on:
         description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
         required: true
         type: string
-      swaApiToken:
-        description: 'The API token for the Azure Static Web App'
-        required: true
-        type: string
       swaResourceGroupName:
         description: 'The name of the resource group for the Azure Static Web App'
         required: true
@@ -35,6 +31,9 @@ on:
         description: 'The name of the Azure Static Web App'
         required: true
         type: string
+    secrets:
+      swaApiToken:
+        required: true
 
 permissions:
   id-token: write
@@ -166,7 +165,7 @@ jobs:
         uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
         with:
           # ref: https://aka.ms/swaworkflowconfig
-          azure_static_web_apps_api_token: ${{ inputs.swaApiToken }}
+          azure_static_web_apps_api_token: ${{ secrets.swaApiToken }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: upload
           app_location: website
@@ -185,7 +184,7 @@ jobs:
         id: closepullrequest
         uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
         with:
-          azure_static_web_apps_api_token: ${{ inputs.swaApiToken }}
+          azure_static_web_apps_api_token: ${{ secrets.swaApiToken }}
           action: "close"
 
 
