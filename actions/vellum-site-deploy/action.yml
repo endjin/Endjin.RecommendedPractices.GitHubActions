@@ -10,6 +10,9 @@ inputs:
   azureSubscriptionId:
     description: 'The Azure Subscription ID of the Azure Static Web App'
     required: true
+  githubToken:
+    description: 'The default GitHub token for the workflow run'
+    required: true
   swaApiToken:
     required: true
     description: 'The API token for the Azure Static Web App'
@@ -105,7 +108,7 @@ runs:
     with:
       # ref: https://aka.ms/swaworkflowconfig
       azure_static_web_apps_api_token: ${{ inputs.swaApiToken }}
-      repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+      repo_token: ${{ inputs.githubToken }} # Used for Github integrations (i.e. PR comments)
       action: upload
       app_location: website
       skip_app_build: true
