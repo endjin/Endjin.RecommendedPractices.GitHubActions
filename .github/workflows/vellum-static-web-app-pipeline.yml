@@ -1,20 +1,17 @@
 name: Azure Static Web Apps CI/CD
 
+#
+# NOTE:
+# This workflow assumes that the following repository variables are set, as it is not possible for the
+# calling workflow to pass them when they are scoped to an environment.
+#  - AZURE_CLIENT_ID
+#  - AZURE_TENANT_ID
+#  - AZURE_SUBSCRIPTION_ID
+#
+
 on:
   workflow_call:
     inputs:
-      azureClientId:
-        description: 'The Azure Client ID for authenticating with Azure via GitHub Federated Identity'
-        required: true
-        type: string
-      azureTenantId:
-        description: 'The Azure Tenant ID for authenticating with Azure'
-        required: true
-        type: string
-      azureSubscriptionId:
-        description: 'The Azure Subscription ID of the Azure Static Web App'
-        required: true
-        type: string
       environment:
         description: 'The environment to deploy to'
         required: true
@@ -109,17 +106,17 @@ jobs:
           mv home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/.dist website
 
           echo "*** DEBUG ***"
-          echo "azureClientId: '${{ inputs.azureClientId }}'"
-          echo "azureTenantId: '${{ inputs.azureTenantId }}'"
-          echo "azureSubscriptionId: '${{ inputs.azureSubscriptionId }}'"
+          echo "azureClientId: '${{ vars.AZURE_CLIENT_ID }}'"
+          echo "azureTenantId: '${{ vars.AZURE_TENANT_ID }}'"
+          echo "azureSubscriptionId: '${{ vars.AZURE_SUBSCRIPTION_ID }}'"
         name: Unzip web site artefact
         working-directory: ${{ github.workspace }}
 
       - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
         with:
-          client-id: ${{ inputs.azureClientId }}
-          tenant-id: ${{ inputs.azureTenantId }}
-          subscription-id: ${{ inputs.azureSubscriptionId }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
 
       - name: 'Check existing preview sites'
@@ -133,7 +130,7 @@ jobs:
 
             $sites = Get-AzStaticWebAppBuild -Name "${{ inputs.swaSiteName }}" `
                                              -ResourceGroupName "${{ inputs.swaResourceGroupName }}" `
-                                             -SubscriptionId "${{ inputs.azureSubscriptionId }}"
+                                             -SubscriptionId "${{ vars.AZURE_SUBSCRIPTION_ID }}"
 
             # Current limits: 1 x Production & 10 x Preview sites
             #
@@ -153,7 +150,7 @@ jobs:
                   Remove-AzStaticWebAppBuild -EnvironmentName $oldest.Name `
                                              -Name "${{ inputs.swaSiteName }}" `
                                              -ResourceGroupName "${{ inputs.swaResourceGroupName }}" `
-                                             -SubscriptionId "${{ inputs.azureSubscriptionId }}"
+                                             -SubscriptionId "${{ vars.AZURE_SUBSCRIPTION_ID }}"
                 }
                 catch {
                   Write-Host ("::warning ::Unable to purge the least recently updated preview - the deployment may fail:`n{0}" -f $_.Exception.Message)
