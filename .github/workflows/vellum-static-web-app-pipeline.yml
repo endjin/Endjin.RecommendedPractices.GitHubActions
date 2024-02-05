@@ -115,7 +115,7 @@ jobs:
           enable-AzPSSession: true
 
       - name: 'Check existing preview sites'
-        uses: azure/powershell@v1
+        uses: azure/powershell@1300bbd2b3e1c21c029fe34887d16d2809a1397f   # v1.4.0
         with:
           inlineScript: |
             # Lookup the web site name from the infra config
