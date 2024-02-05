@@ -5,6 +5,9 @@ inputs:
     description: 'The path to the build script'
     required: true
     default: './build.ps1'
+  githubVellumPat:
+    description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
+    required: true
 
 runs:
   using: "composite"
@@ -30,7 +33,7 @@ runs:
       & ${{ inputs.buildScriptPath }} -Verbose
     shell: pwsh
     env:
-      GH_TOKEN : ${{ secrets.githubVellumPat }}
+      GH_TOKEN : ${{ inputs.githubVellumPat }}
       NPM_CACHE_HIT: ${{ steps.cache_npm_dependencies.outputs.cache-hit }}
 
   - run: |
