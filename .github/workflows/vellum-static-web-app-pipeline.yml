@@ -103,9 +103,10 @@ jobs:
           key: website-${{ github.sha }}
       - run: |
           unzip website.zip
-          mv ./.dist website
+          echo "*** DEBUG ***"
+          ls -la ${{ github.workspace }}
+          mv ${{ github.workspace }}/.dist website
         name: Unzip web site artefact
-        working-directory: ${{ github.workspace }}
 
       - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
         with:
