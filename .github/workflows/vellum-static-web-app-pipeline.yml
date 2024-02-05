@@ -19,10 +19,6 @@ on:
         description: 'The environment to deploy to'
         required: true
         type: string
-      githubVellumPat:
-        description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
-        required: true
-        type: string
       swaResourceGroupName:
         description: 'The name of the resource group for the Azure Static Web App'
         required: true
@@ -32,8 +28,12 @@ on:
         required: true
         type: string
     secrets:
+      githubVellumPat:
+        required: true
+        description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
       swaApiToken:
         required: true
+        description: 'The API token for the Azure Static Web App'
 
 permissions:
   id-token: write
@@ -73,7 +73,7 @@ jobs:
           & ./build.ps1 -Verbose
         shell: pwsh
         env:
-          GH_TOKEN : ${{ inputs.githubVellumPat }}
+          GH_TOKEN : ${{ secrets.githubVellumPat }}
           NPM_CACHE_HIT: ${{ steps.cache_npm_dependencies.outputs.cache-hit }}
 
       - run: |
