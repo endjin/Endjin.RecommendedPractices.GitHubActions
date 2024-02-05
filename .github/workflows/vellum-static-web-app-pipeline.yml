@@ -103,7 +103,7 @@ jobs:
           key: website-${{ github.sha }}
       - run: |
           unzip website.zip
-          mv home/runner/work/intro-to-rx-site/intro-to-rx-site/.dist website
+          mv ./.dist website
         name: Unzip web site artefact
         working-directory: ${{ github.workspace }}
 
