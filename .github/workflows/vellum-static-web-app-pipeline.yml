@@ -103,10 +103,14 @@ jobs:
           key: website-${{ github.sha }}
       - run: |
           unzip website.zip
+          # The zip contains the full folder structure of the original source, so the extracted files
+          # are several layers deep. We need to move the '.dist' folder into the 'website' folder as
+          # this is where it is expected to be.
           echo "*** DEBUG ***"
-          ls -la ${{ github.workspace }}
-          mv ${{ github.workspace }}/.dist website
+          ls -la home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}
+          mv home/runner/work/${{ github.event.repository.name }}/${{ github.event.repository.name }}/.dist website
         name: Unzip web site artefact
+        working-directory: ${{ github.workspace }}
 
       - uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d    # v1.6.1
         with:
