@@ -25,10 +25,10 @@ on:
         required: true
         type: string
     secrets:
-      githubVellumPat:
+      ENDJIN_GITHUB_READER_PAT:
         required: true
         description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
-      swaApiToken:
+      SWA_API_TOKEN:
         required: true
         description: 'The API token for the Azure Static Web App'
 
@@ -70,7 +70,7 @@ jobs:
           & ./build.ps1 -Verbose
         shell: pwsh
         env:
-          GH_TOKEN : ${{ secrets.githubVellumPat }}
+          GH_TOKEN : ${{ secrets.ENDJIN_GITHUB_READER_PAT }}
           NPM_CACHE_HIT: ${{ steps.cache_npm_dependencies.outputs.cache-hit }}
 
       - run: |
@@ -170,7 +170,7 @@ jobs:
         uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
         with:
           # ref: https://aka.ms/swaworkflowconfig
-          azure_static_web_apps_api_token: ${{ secrets.swaApiToken }}
+          azure_static_web_apps_api_token: ${{ vars.SWA_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
           action: upload
           app_location: website
@@ -189,7 +189,7 @@ jobs:
         id: closepullrequest
         uses: azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9    # v1.0.0
         with:
-          azure_static_web_apps_api_token: ${{ secrets.swaApiToken }}
+          azure_static_web_apps_api_token: ${{ vars.SWA_API_TOKEN }}
           action: "close"
 
 
