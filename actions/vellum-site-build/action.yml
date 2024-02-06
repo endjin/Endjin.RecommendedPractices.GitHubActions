@@ -1,0 +1,49 @@
+name: 'Endjin.RecommendedPractices.Build.Vellum'
+description: 'Runs the standardised build process for a Vellum-based static web app'
+inputs:
+  buildScriptPath:
+    description: 'The path to the build script'
+    required: true
+    default: './build.ps1'
+  githubVellumPat:
+    description: 'The GitHub Personal Access Token for downloading Vellum CLI as a GitHub release asset'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+
+  - name: Get cached NPM modules
+    id: cache_npm_dependencies
+    uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
+    with:
+      path: |
+        .github/node_modules
+      key: ${{ runner.os }}-npm-${{ hashFiles('.github/package-lock.json') }}
+      restore-keys: |
+        ${{ runner.os }}-npm-
+
+  - name: Build
+    id: build
+    run: |
+      if ($env:GITHUB_REF -eq "refs/heads/main") {
+        $env:BUILDVAR_RebuildSearchIndex = "True"
+      }
+      & ${{ inputs.buildScriptPath }} -Verbose
+    shell: pwsh
+    env:
+      GH_TOKEN : ${{ inputs.githubVellumPat }}
+      NPM_CACHE_HIT: ${{ steps.cache_npm_dependencies.outputs.cache-hit }}
+
+  - run: |
+      zip -r website.zip ${{ github.workspace }}/.dist
+    name: Zip generated web site
+    shell: bash
+
+  - name: Store generated web site
+    id: cache_site
+    uses: actions/cache/save@13aacd865c20de90d75de3b17ebe84f7a17d57d2    # v4.0.0
+    with:
+      path: website.zip
+      key: website-${{ github.sha }}
