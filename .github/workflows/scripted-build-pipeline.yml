@@ -265,6 +265,12 @@ jobs:
         name: Code Coverage
         title: Code Coverage Report
         body-file: code-coverage-results.md
+    - name: Add Code Coverage PR comment
+      if: always() && steps.check_coverage.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@v2
+      with:
+        recreate: true
+        path: code-coverage-results.md
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@e780361cd1fc1b1a170624547b3ffda64787d365   # v2.12.0
       if: always()
