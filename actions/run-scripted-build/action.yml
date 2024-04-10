@@ -46,6 +46,10 @@ inputs:
     description: The path to the build script to run.
     required: false
     default: './build.ps1'
+  enableCrossOsCaching:
+    description: "When true the enables the 'enableCrossOsArchive' property on the GitHub Actions cache task. ref: https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cross-os-cache"
+    required: false
+    default: 'false'
   
 
 outputs:
@@ -96,6 +100,7 @@ runs:
     with:
       path: ${{ inputs.inputCachePaths }}
       key: build-state-${{ github.sha }}
+      enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - id: cache_debug
     run: |
@@ -120,6 +125,7 @@ runs:
     with:
       path: ${{ inputs.outputCachePaths }}
       key: build-state-${{ github.sha }}
+      enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - name: Upload Artifact
     uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8    # v4.3.0
