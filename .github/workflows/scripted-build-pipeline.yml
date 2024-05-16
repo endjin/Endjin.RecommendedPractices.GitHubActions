@@ -67,10 +67,15 @@ on:
         default: false
         type: boolean
       buildScriptPath:
-          description: The path to the build script to run.
-          required: false
-          default: ./build.ps1
-          type: string
+        description: The path to the build script to run.
+        required: false
+        default: ./build.ps1
+        type: string
+      runnerOs:
+        description: The operating system to run all stages of this workflow.
+        required: false
+        default: ubuntu-latest
+        type: string
 
     secrets:
       compilePhaseAzureCredentials:
@@ -95,15 +100,15 @@ on:
         required: false
 
 env:
-  CODE_COVERAGE_RESULTS_DIR: ${{ vars.BUILD_CODE_COVERAGE_RESULTS_DIR || '_codeCoverage' }}
-  CODE_COVERAGE_RESULTS_FILE: ${{ vars.BUILD_CODE_COVERAGE_RESULTS_FILE || 'Cobertura.xml' }}
+  CODE_COVERAGE_SUMMARY_DIR: ${{ vars.CODE_COVERAGE_SUMMARY_DIR || '.' }}
+  CODE_COVERAGE_SUMMARY_FILE: ${{ vars.CODE_COVERAGE_SUMMARY_FILE || 'code-coverage-results.md' }}
   CODE_COVERAGE_LOWER_THRESHOLD: ${{ vars.BUILD_CODE_COVERAGE_LOWER_THRESHOLD || 60 }}
   CODE_COVERAGE_UPPER_THRESHOLD: ${{ vars.BUILD_CODE_COVERAGE_UPPER_THRESHOLD || 80 }}
 
 jobs:
   compile:
     name: Compile & Analyse
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runnerOs }}
     outputs:
       semver: ${{ steps.run_compile.outputs.semver }}
       major: ${{ steps.run_compile.outputs.major }}
@@ -114,6 +119,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
         fetch-depth: 0
+        submodules: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
       with: 
         environmentVariablesYamlBase64: ${{ inputs.compilePhaseEnv}}
@@ -138,7 +144,7 @@ jobs:
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-matrix-build
       id: run_compile
       with:
         displayName: Compile & Analyse
@@ -171,7 +177,7 @@ jobs:
     needs:
     - compile
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runnerOs }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
@@ -200,7 +206,7 @@ jobs:
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-matrix-build
       with:
         displayName: Run Tests
         buildScriptPath: ${{ inputs.buildScriptPath }}
@@ -220,60 +226,44 @@ jobs:
         # testing new multiple test logger support - will only affect repos using latest version of build module
         BUILDVAR_DotNetTestLoggers: >
           [
-            "GitHubActions",
             "trx;LogFilePrefix=test-results_"
           ]
-    - id: check_coverage
-      name: Check Code Coverage Output
+    - id: check_coverage_summary
+      name: Check Code Coverage Summary Output
       if: always()
       run: |
-        # check if the code coverage file exists, but ensure the build doesn't fail if it can't be found
+        # check if the code coverage summary file exists, but ensure the build doesn't fail if it can't be found
         try {
-          $coverageFile = Join-Path $env:CODE_COVERAGE_RESULTS_DIR $env:CODE_COVERAGE_RESULTS_FILE
+          $coverageFile = Join-Path $env:CODE_COVERAGE_SUMMARY_DIR $env:CODE_COVERAGE_SUMMARY_FILE
           Write-Host "Checking for code coverage file: $coverageFile"
           if (Test-Path $coverageFile) {
-            Write-Host "Code coverage file exists"
+            Write-Host "Code coverage summary file exists"
             echo "EXISTS=true" >> $env:GITHUB_OUTPUT
           }
         }
         catch {}
       shell: pwsh
-    - name: Store Code Coverage Artefacts
-      if: always() && steps.check_coverage.outputs.EXISTS == 'true'
-      uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8    # v4.3.0
-      with:
-        name: CoverageReport      
-        path: _codeCoverage
-    - name: Generate Code Coverage Summary Report
-      if: always() && steps.check_coverage.outputs.EXISTS == 'true'
-      uses: irongut/CodeCoverageSummary@51cc3a756ddcd398d447c044c02cb6aa83fdae95    # v1.3.0
-      with:
-        filename: ${{ env.CODE_COVERAGE_RESULTS_DIR }}/${{ env.CODE_COVERAGE_RESULTS_FILE }}
-        badge: true
-        fail_below_min: false
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: false
-        indicators: true
-        output: both
-        thresholds: '${{ env.CODE_COVERAGE_LOWER_THRESHOLD }} ${{ env.CODE_COVERAGE_UPPER_THRESHOLD }}'
-    - name: Publish Code Coverage Summary Report
-      # NOTE: Skip this is we're running from a fork, as we won't have permissions to annotate the check run
-      if: always() && steps.check_coverage.outputs.EXISTS == 'true' && github.event.pull_request.head.repo.full_name == github.repository
-      uses: dtinth/markdown-report-action@af8143d37cced4c514fd67539a2e58c2f432da09    # v1.0.0
-      with:
-        name: Code Coverage
-        title: Code Coverage Report
-        body-file: code-coverage-results.md
     - name: Add Code Coverage PR comment
-      if: always() && steps.check_coverage.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
+      # TODO: Test whether this works when running from a fork?
+      if: always() && steps.check_coverage_summary.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
       uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31    # v2.9.0
       with:
         recreate: true
-        path: code-coverage-results.md
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@e780361cd1fc1b1a170624547b3ffda64787d365   # v2.12.0
-      if: always()
+        path: ${{ env.CODE_COVERAGE_SUMMARY_DIR }}/${{ env.CODE_COVERAGE_SUMMARY_FILE }}
+        header: ${{ matrix.os }}-${{ matrix.dotnetFramework }}
+        message: |
+          Code coverage report for ${{ matrix.os }}-${{ matrix.dotnetFramework }}:
+    # Conditional test result publishing as we can't use the docker version of the action on Windows
+    - name: Publish Test Results (Linux)
+      uses: EnricoMi/publish-unit-test-result-action/linux@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
+      if: always() && matrix.os == 'ubuntu-latest'
+      with:
+        nunit_files: "*TestResults.xml"    # produced by Pester
+        trx_files: "**/test-results_*.trx" # produced by dotnet test
+        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
+    - name: Publish Test Results (Windows)
+      uses: EnricoMi/publish-unit-test-result-action/windows@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
+      if: always() && matrix.os == 'windows-latest'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
@@ -283,7 +273,7 @@ jobs:
     needs:
     - compile
     name: Package
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runnerOs }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
@@ -312,7 +302,7 @@ jobs:
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-matrix-build
       with:
         displayName: Build Packages
         buildScriptPath: ${{ inputs.buildScriptPath }}
@@ -368,7 +358,7 @@ jobs:
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/add-matrix-build
       with:
         displayName: Publish Packages
         buildScriptPath: ${{ inputs.buildScriptPath }}
