@@ -71,7 +71,7 @@ on:
         required: false
         default: ./build.ps1
         type: string
-      runnerOs:
+      runsOn:
         description: The operating system to run all stages of this workflow.
         required: false
         default: ubuntu-latest
@@ -108,7 +108,7 @@ env:
 jobs:
   compile:
     name: Compile & Analyse
-    runs-on: ${{ inputs.runnerOs }}
+    runs-on: ${{ inputs.runsOn }}
     outputs:
       semver: ${{ steps.run_compile.outputs.semver }}
       major: ${{ steps.run_compile.outputs.major }}
@@ -177,7 +177,7 @@ jobs:
     needs:
     - compile
     name: Test
-    runs-on: ${{ inputs.runnerOs }}
+    runs-on: ${{ inputs.runsOn }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
@@ -243,6 +243,26 @@ jobs:
         }
         catch {}
       shell: pwsh
+    - id: check_os
+      name: Check Runner OS
+      if: always()
+      run: |
+        # check if the code coverage summary file exists, but ensure the build doesn't fail if it can't be found
+        if ($IsWindows) {
+          $RunnerOs = "windows"
+        } 
+        elseif ($IsLinux) {
+            $RunnerOs = "linux"
+        }
+        elseif ($IsMacOS) {
+            $RunnerOs = "macos"
+        }
+        else {
+            $RunnerOs = "Unknown"
+        }
+        Write-Host "Runner OS: $RunnerOs"
+        echo "RUNNEROS=$RunnerOs" >> $env:GITHUB_OUTPUT
+      shell: pwsh
     - name: Add Code Coverage PR comment
       # TODO: Test whether this works when running from a fork?
       if: always() && steps.check_coverage_summary.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
@@ -250,20 +270,18 @@ jobs:
       with:
         recreate: true
         path: ${{ env.CODE_COVERAGE_SUMMARY_DIR }}/${{ env.CODE_COVERAGE_SUMMARY_FILE }}
-        header: ${{ matrix.os }}-${{ matrix.dotnetFramework }}
-        message: |
-          Code coverage report for ${{ matrix.os }}-${{ matrix.dotnetFramework }}:
+        header: ${{ inputs.runsOn }}
     # Conditional test result publishing as we can't use the docker version of the action on Windows
     - name: Publish Test Results (Linux)
       uses: EnricoMi/publish-unit-test-result-action/linux@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
-      if: always() && matrix.os == 'ubuntu-latest'
+      if: always() && steps.check_os.outputs.RUNNEROS == 'linux'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
         junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
     - name: Publish Test Results (Windows)
       uses: EnricoMi/publish-unit-test-result-action/windows@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
-      if: always() && matrix.os == 'windows-latest'
+      if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
@@ -273,7 +291,7 @@ jobs:
     needs:
     - compile
     name: Package
-    runs-on: ${{ inputs.runnerOs }}
+    runs-on: ${{ inputs.runsOn }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
