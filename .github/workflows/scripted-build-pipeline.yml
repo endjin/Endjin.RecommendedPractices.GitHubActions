@@ -134,7 +134,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@8c334a195cbb38e46038007b304988d888bf676a    # v2.0.0
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -196,7 +196,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@8c334a195cbb38e46038007b304988d888bf676a    # v2.0.0
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -308,7 +308,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.packagePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@8c334a195cbb38e46038007b304988d888bf676a    # v2.0.0
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
@@ -364,7 +364,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@8c334a195cbb38e46038007b304988d888bf676a    # v2.0.0
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
