@@ -1,9 +1,6 @@
 name: 'Endjin.RecommendedPractices.BuildDeploy.Vellum'
 description: 'Runs the standardised build & deployment process for a Vellum-based static web app'
 inputs:
-  build_site:
-    description: 'When true, the static web app will be re-generated'
-    required: true
   deployment_client_id:
     description: 'The Client ID for the deployment service principal'
     required: true
@@ -12,9 +9,6 @@ inputs:
     required: true
   deployment_tenant_id:
     description: 'The Tenant ID for the deployment service principal'
-    required: true
-  deploy_site:
-    description: 'When true, the static web app will be deployed'
     required: true
   environment:
     description: 'The environment to deploy to'
