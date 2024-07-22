@@ -49,7 +49,7 @@ runs:
     working-directory: ${{ github.workspace }}
     shell: bash
 
-  - uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
+  - uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
     with:
       client-id: ${{ inputs.azureClientId }}
       tenant-id: ${{ inputs.azureTenantId }}
