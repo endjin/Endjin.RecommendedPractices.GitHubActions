@@ -57,6 +57,17 @@ on:
         description: 'The resource group for the static web app'
         type: string
         required: true
+    secrets:
+      ENDJIN_GITHUB_READER_PAT:
+        description: 'The Personal Access Token for the GitHub reader account'
+        required: true
+      GITHUB_TOKEN:
+        description: 'The GitHub Token'
+        required: true
+      SWA_API_TOKEN:
+        description: 'The API Token for the Static Web App'
+        required: true
+      
 
 permissions:
   id-token: write
