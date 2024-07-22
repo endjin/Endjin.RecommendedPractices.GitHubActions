@@ -118,17 +118,3 @@ jobs:
   #         azure_static_web_apps_api_token: ${{ secrets.SWA_API_TOKEN }}
   #         action: "close"
   #         app_location: website
-
-
-  cleardown:
-    if: always() && (inputs.build_site == true || inputs.deploy_site == true)
-    needs:
-    - build
-    - deploy
-    runs-on: ubuntu-latest
-    name: Cleardown
-    steps:
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/remove-pipeline-state@main
-      name: Clear pipeline state
-      with:
-        cacheKeyPrefix: website
