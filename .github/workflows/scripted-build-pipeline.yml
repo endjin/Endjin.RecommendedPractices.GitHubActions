@@ -111,7 +111,7 @@ jobs:
       preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -173,7 +173,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -285,7 +285,7 @@ jobs:
     name: Package
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -341,7 +341,7 @@ jobs:
       contents: write
       packages: write
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   #v4.1.1
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332   #v4.1.7
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
