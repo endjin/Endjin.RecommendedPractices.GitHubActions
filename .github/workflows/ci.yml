@@ -36,6 +36,10 @@ jobs:
       RESOLVED_ENV_VARS: ${{ steps.prepareEnvVarsAndSecrets.outputs.environmentVariablesYamlBase64 }}
       RESOLVED_SECRETS: ${{ steps.prepareEnvVarsAndSecrets.outputs.secretsYamlBase64 }}
     steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+      with:
+        fetch-depth: 0
+        
     # Declare any environment variables and/or secrets that need to be available inside the build process
     - uses: ./actions/prepare-env-vars-and-secrets
       id: prepareEnvVarsAndSecrets
