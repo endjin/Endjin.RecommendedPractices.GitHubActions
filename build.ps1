@@ -120,21 +120,21 @@ Import-Module $BuildModulePath -RequiredVersion $BuildModuleVersion -Force
 #
 # Build process control options
 #
-$SkipInit = $true
-$SkipVersion = $true
-$SkipBuild = $true
+$SkipInit = $false
+$SkipVersion = $false
+$SkipBuild = $false
 $CleanBuild = $Clean
-$SkipTest = $true
-$SkipTestReport = $true
+$SkipTest = $false
+$SkipTestReport = $false
 $SkipAnalysis = $true
-$SkipPackage = $true
-$SkipPublish = $true
+$SkipPackage = $false
+$SkipPublish = $false
 
 
 #
 # Build process configuration
 #
-$SolutionToBuild = ""
+$SolutionToBuild = "tests/tests.sln"
 
 #
 # Specify files to exclude from code coverage
