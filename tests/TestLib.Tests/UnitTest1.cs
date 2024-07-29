@@ -10,6 +10,6 @@ public class Tests
     [Test]
     public void Test1()
     {
-        Assert.Pass();
+        Assert.AreEqual(4, Class1.Add(2, 2));
     }
 }

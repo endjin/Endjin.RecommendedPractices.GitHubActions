@@ -1,6 +1,6 @@
 ﻿namespace TestLib;
 
-public class Class1
+public static class Class1
 {
-    public int Add(int a, int b) => a + b;
+    public static int Add(int a, int b) => a + b;
 }
