@@ -240,7 +240,7 @@ jobs:
       shell: pwsh
     - name: Store Code Coverage Artefacts
       if: always() && steps.check_coverage.outputs.EXISTS == 'true'
-      uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8    # v4.3.0
+      uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a    # v4.3.6
       with:
         name: CoverageReport      
         path: _codeCoverage
