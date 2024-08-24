@@ -110,7 +110,7 @@ if (!($BuildModulePath)) {
 else {
     Write-Information "BuildModulePath: $BuildModulePath"
 }
-Import-Module $BuildModulePath -RequiredVersion $BuildModuleVersion -Force
+Import-Module $BuildModulePath -RequiredVersion ($BuildModuleVersion -split '-')[0] -Force
 
 # Load the build process & tasks
 . Endjin.RecommendedPractices.Build.tasks
