@@ -244,7 +244,7 @@ jobs:
       name: Check Runner OS
       if: always()
       run: |
-        # check if the code coverage summary file exists, but ensure the build doesn't fail if it can't be found
+        # store the runner's operating system (i.e. distinct from the OS version info available via runner image)
         if ($IsWindows) {
           $RunnerOs = "windows"
         } 
