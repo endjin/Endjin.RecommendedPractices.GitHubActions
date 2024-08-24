@@ -56,7 +56,7 @@ param (
     [string] $CoverageDir = "_codeCoverage",
 
     [Parameter()]
-    [string] $TestReportTypes = "Cobertura",
+    [string] $TestReportTypes = "HtmlInline",
 
     [Parameter()]
     [string] $PackagesDir = "_packages",
@@ -72,10 +72,10 @@ param (
     [string] $BuildModulePath,
 
     [Parameter()]
-    [string] $BuildModuleVersion = "1.5.8",
+    [string] $BuildModuleVersion = "1.5.9",
 
     [Parameter()]
-    [switch] $BuildModulePreReleaseVersion,
+    [bool] $BuildModulePreReleaseVersion = $true,
 
     [Parameter()]
     [string] $InvokeBuildModuleVersion = "5.10.3"
