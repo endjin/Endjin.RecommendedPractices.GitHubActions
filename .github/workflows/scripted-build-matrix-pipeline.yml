@@ -250,8 +250,7 @@ jobs:
         artifactName: ${{ inputs.testArtifactName }}
         artifactPath: ${{ inputs.testArtifactPath }}
       env:
-        BUILDVAR_TestReportTypes: HtmlInline;Cobertura
-        # testing new multiple test logger support - will only affect repos using latest version of build module
+        # Set build to produce .trx test results file which will be picked-up when publishing test results
         BUILDVAR_DotNetTestLoggers: >
           [
             "trx;LogFilePrefix=test-results_"
