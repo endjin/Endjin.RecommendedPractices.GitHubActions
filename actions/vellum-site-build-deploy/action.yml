@@ -1,0 +1,63 @@
+name: 'Endjin.RecommendedPractices.BuildDeploy.Vellum'
+description: 'Runs the standardised build & deployment process for a Vellum-based static web app'
+inputs:
+  deployment_client_id:
+    description: 'The Client ID for the deployment service principal'
+    required: true
+  deployment_subscription_id:
+    description: 'The Subscription ID for the deployment service principal'
+    required: true
+  deployment_tenant_id:
+    description: 'The Tenant ID for the deployment service principal'
+    required: true
+  environment:
+    description: 'The environment to deploy to'
+    required: true
+  export_storage_account:
+    description: 'The storage account where the export file will be published'
+    default: ''
+  export_storage_container:
+    description: 'The storage container where the export file will be published'
+    default: ''
+  export_storage_blob_path:
+    description: 'The blob path where the export file will be published'
+    default: ''
+  force_export:
+    description: 'When true, the export file will be published to specified storage account regardless of which branch, otherwise only the main branch will be published'
+    default: 'false'
+  github_reader_pat:
+    description: 'A GitHub PAT with Org-level read access to releases'
+    required: true
+  swa_deployment_token:
+    description: 'The Azure Static Web Apps deployment token for the web site'
+    required: true
+  website_name:
+    description: 'The name of the static web app'
+    required: true
+  website_resource_group:
+    description: 'The resource group for the static web app'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/vellum-site-build@main
+      id: build
+      with:
+        githubVellumPat: ${{ inputs.github_reader_pat }}
+      env:
+        BUILDVAR_PublishExportFile: ${{ (inputs.force_export || github.ref == 'refs/heads/main') && 'True' || 'False' }}
+        BUILDVAR_ExportPublishStorageAccountName: ${{ inputs.export_storage_account }}
+        BUILDVAR_ExportPublishStorageContainerName: ${{ inputs.export_storage_container }}
+        BUILDVAR_ExportPublishStorageBlobPath: ${{ inputs.export_storage_blob_path }}
+
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/vellum-site-deploy@main
+      id: deploy
+      with:
+        azureClientId: ${{ inputs.deployment_client_id }}
+        azureTenantId: ${{ inputs.deployment_tenant_id }}
+        azureSubscriptionId: ${{ inputs.deployment_subscription_id }}
+        githubToken: ${{ github.token}}
+        swaApiToken: ${{ inputs.swa_deployment_token }}
+        swaResourceGroupName: ${{ inputs.website_resource_group }}
+        swaSiteName: ${{ inputs.website_name }}
