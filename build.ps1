@@ -56,7 +56,7 @@ param (
     [string] $CoverageDir = "_codeCoverage",
 
     [Parameter()]
-    [string] $TestReportTypes = "Cobertura",
+    [string] $TestReportTypes = "HtmlInline",
 
     [Parameter()]
     [string] $PackagesDir = "_packages",
@@ -72,10 +72,10 @@ param (
     [string] $BuildModulePath,
 
     [Parameter()]
-    [string] $BuildModuleVersion = "1.5.6",
+    [string] $BuildModuleVersion = "1.5.9",
 
     [Parameter()]
-    [switch] $BuildModulePreReleaseVersion,
+    [bool] $BuildModulePreReleaseVersion = $false,
 
     [Parameter()]
     [string] $InvokeBuildModuleVersion = "5.10.3"
@@ -110,7 +110,7 @@ if (!($BuildModulePath)) {
 else {
     Write-Information "BuildModulePath: $BuildModulePath"
 }
-Import-Module $BuildModulePath -RequiredVersion $BuildModuleVersion -Force
+Import-Module $BuildModulePath -RequiredVersion ($BuildModuleVersion -split '-')[0] -Force
 
 # Load the build process & tasks
 . Endjin.RecommendedPractices.Build.tasks

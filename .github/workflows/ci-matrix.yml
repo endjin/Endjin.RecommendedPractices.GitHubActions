@@ -1,4 +1,4 @@
-name: ci
+name: ci-matrix
 on:
   pull_request:
     branches:
@@ -52,7 +52,7 @@ jobs:
 
   build:
     needs: prepareConfig
-    uses: ./.github/workflows/scripted-build-pipeline.yml
+    uses: ./.github/workflows/scripted-build-matrix-pipeline.yml
     with:
       netSdkVersion: '8.x'
       # workflow_dispatch inputs are always strings, the type property is just for the UI
@@ -61,6 +61,13 @@ jobs:
       publishPhaseEnv: ${{ needs.prepareConfig.outputs.RESOLVED_ENV_VARS }}
       additionalCachePaths: |
         tests
+      enableCrossOsCaching: true
+      testPhaseMatrixJson: |
+        {
+          "os": ["ubuntu-latest", "windows-latest"],
+          "dotnetFramework": ["net8.0"],
+          "exclude": []
+        }
     secrets:
       compilePhaseAzureCredentials: ${{ secrets.ENDJIN_PROD_ACR_READER_CREDENTIALS }}
       compilePhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}

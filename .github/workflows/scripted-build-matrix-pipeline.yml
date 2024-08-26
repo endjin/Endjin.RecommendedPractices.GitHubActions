@@ -5,7 +5,7 @@ on:
         description: The primary .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
         required: true
         type: string
-        default: '6.0.x'
+        default: '8.0.x'
       additionalNetSdkVersion:
         description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
         required: false
@@ -71,10 +71,35 @@ on:
         required: false
         default: ./build.ps1
         type: string
-      runsOn:
-        description: The operating system to run all stages of this workflow.
+      enableCrossOsCaching:
+        description: "When true the enables the 'enableCrossOsArchive' property on the GitHub Actions cache task. ref: https://github.com/actions/cache/blob/main/tips-and-workarounds.md#cross-os-cache"
         required: false
-        default: ubuntu-latest
+        default: true
+        type: boolean
+      compilePhaseRunnerOs:
+        description: The operating system to run the 'compile' stage of this workflow on.
+        required: false
+        default: windows-latest
+        type: string
+      testPhaseMatrixJson:
+        description: The OS and .NET Framework matrix configuration to be used for running the 'test' stage of this workflow.
+        required: false
+        default: |
+          {
+            "os": ["ubuntu-latest", "windows-latest"],
+            "dotnetFramework": ["net8.0", "net481"],
+            "exclude": [
+              {
+                "os": "ubuntu-latest",
+                "dotnetFramework": "net481"
+              }
+            ]
+          }
+        type: string
+      packagePhaseRunnerOs:
+        description: The operating system to run the 'package' stage of this workflow on.
+        required: false
+        default: windows-latest
         type: string
 
     secrets:
@@ -106,7 +131,7 @@ env:
 jobs:
   compile:
     name: Compile & Analyse
-    runs-on: ${{ inputs.runsOn }}
+    runs-on: ${{ inputs.compilePhaseRunnerOs }}
     outputs:
       semver: ${{ steps.run_compile.outputs.semver }}
       major: ${{ steps.run_compile.outputs.major }}
@@ -114,7 +139,7 @@ jobs:
       preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       with:
         fetch-depth: 0
         submodules: true
@@ -157,6 +182,7 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+        enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
       env:
         BUILDVAR_AnalysisOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME}}
         BUILDVAR_AnalysisOutputContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME}}
@@ -175,9 +201,12 @@ jobs:
     needs:
     - compile
     name: Test
-    runs-on: ${{ inputs.runsOn }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(inputs.testPhaseMatrixJson) }}
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
         fetch-depth: 0
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
@@ -217,6 +246,7 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+        enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
         artifactName: ${{ inputs.testArtifactName }}
         artifactPath: ${{ inputs.testArtifactPath }}
       env:
@@ -225,6 +255,7 @@ jobs:
           [
             "trx;LogFilePrefix=test-results_"
           ]
+        BUILDVAR_TargetFrameworkMoniker: ${{ matrix.dotnetFramework }}
     - id: check_coverage_summary
       name: Check Code Coverage Summary Output
       if: always()
@@ -267,7 +298,7 @@ jobs:
       with:
         recreate: true
         path: ${{ env.CODE_COVERAGE_SUMMARY_DIR }}/${{ env.CODE_COVERAGE_SUMMARY_FILE }}
-        header: ${{ inputs.runsOn }}
+        header: ${{ matrix.os }}-${{ matrix.dotnetFramework }}
     # Conditional test result publishing as we can't use the docker version of the action on Windows
     - name: Publish Test Results (Linux)
       uses: EnricoMi/publish-unit-test-result-action@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
@@ -288,7 +319,7 @@ jobs:
     needs:
     - compile
     name: Package
-    runs-on: ${{ inputs.runsOn }}
+    runs-on: ${{ inputs.packagePhaseRunnerOs }}
     steps:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
@@ -330,6 +361,7 @@ jobs:
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+        enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
         outputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
@@ -383,6 +415,7 @@ jobs:
         inputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
+        enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
         artifactName: ${{ inputs.publishArtifactName }}
         artifactPath: ${{ inputs.publishArtifactPath }}
       env:
