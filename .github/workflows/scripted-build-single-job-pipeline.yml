@@ -62,7 +62,7 @@ on:
 env:
   CODE_COVERAGE_SUMMARY_DIR: ${{ vars.CODE_COVERAGE_SUMMARY_DIR || '_codeCoverage' }}
   CODE_COVERAGE_SUMMARY_FILE: ${{ vars.CODE_COVERAGE_SUMMARY_FILE || 'SummaryGithub.md' }}
-  DEFAULT_BUILD_TASKS: ${{ (inputs.forcePublish || startsWith(github.ref, 'refs/tags/') && 'FullBuildAndPublish' || 'FullBuild') }}
+  DEFAULT_BUILD_TASKS: ${{ (inputs.forcePublish || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}
 
 jobs:
   build:
