@@ -103,7 +103,7 @@ jobs:
       with:
         creds: ${{ secrets.buildAzureCredentials }}
         enable-AzPSSession: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/single-job-build-workflow
       id: run_build
       with:
         displayName: Run Build
