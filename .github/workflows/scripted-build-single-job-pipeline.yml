@@ -14,11 +14,6 @@ on:
         description: Specify an additional Python version required for the build process
         required: false
         type: string
-      additionalCachePaths:
-        description: Custom paths that need to be included in the multi-stage pipeline caching.
-        required: false
-        default: ''
-        type: string
       configuration:
         description: The target build configuration.  
         required: false
@@ -38,11 +33,6 @@ on:
         type: string
       forcePublish:
         description: When true, the Publish stage will be run regardless of the current branch or tag.
-        required: false
-        default: false
-        type: boolean
-      skipCleanup:
-        description: When true the pipeline clean-up stage will not be run. For example, the cache used between pipeline stages will be retained.
         required: false
         default: false
         type: boolean
