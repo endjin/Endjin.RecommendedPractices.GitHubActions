@@ -78,9 +78,6 @@ jobs:
   build:
     name: Build
     runs-on: ${{ inputs.runsOn }}
-    permissions:
-      contents: write
-      packages: write
     outputs:
       semver: ${{ steps.run_build.outputs.semver }}
       major: ${{ steps.run_build.outputs.major }}
