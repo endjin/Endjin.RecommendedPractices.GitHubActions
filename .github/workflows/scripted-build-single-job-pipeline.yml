@@ -61,7 +61,7 @@ on:
         type: string
       buildTasks:
         description: The tasks that need to be run as part of the build process, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
-        required: true
+        required: false
         default: FullBuildAndPublish
         type: string
       runsOn:
