@@ -1,0 +1,48 @@
+name: ci-compositie-action
+on:
+  pull_request:
+    branches:
+    - main
+  workflow_dispatch:
+    inputs:
+      forcePublish:
+        description: When true the Publish stage will always be run, otherwise it only runs for tagged versions.
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write  # enable cache clean-up
+  checks: write  # enable test result annotations
+  contents: write  # enable creating releases
+  issues: read
+  packages: write  # enable publishing packages
+  pull-requests: write  # enable test result annotations 
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{ steps.run_build.outputs.semver }}
+      major: ${{ steps.run_build.outputs.major }}
+      majorMinor: ${{ steps.run_build.outputs.majorMinor }}
+      preReleaseTag: ${{ steps.run_build.outputs.preReleaseTag }}
+
+    steps:
+    - uses: ./actions/run-build-process
+      id: run_build
+      with:
+        netSdkVersion: '8.x'
+        # workflow_dispatch inputs are always strings, the type property is just for the UI
+        forcePublish: ${{ github.event.inputs.forcePublish == 'true' }}
+        buildEnv: |
+          BUILDVAR_NuGetPublishSource: "${{ startsWith(github.ref, 'refs/tags/') && 'https://api.nuget.org/v3/index.json' || 'https://nuget.pkg.github.com/endjin/index.json' }}"
+        buildSecrets: |
+          buildAzureCredentials: ${{ secrets.ENDJIN_PROD_ACR_READER_CREDENTIALS }}
+          NUGET_API_KEY: "${{ startsWith(github.ref, 'refs/tags/') && secrets.ENDJIN_NUGET_APIKEY || secrets.ENDJIN_GITHUB_PUBLISHER_PAT }}"
+          SBOM_ANALYSIS_RELEASE_READER_PAT: "${{ secrets.ENDJIN_GITHUB_READER_PAT }}"
