@@ -95,7 +95,7 @@ runs:
       run: |
         echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_ENV
         echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_ENV
-        echo "DEFAULT_BUILD_TASKS=${{ (lowercase(inputs.forcePublish) == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_ENV
+        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_ENV
       shell: bash
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
