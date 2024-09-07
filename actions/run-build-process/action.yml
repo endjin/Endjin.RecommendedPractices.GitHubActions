@@ -47,6 +47,23 @@ inputs:
   buildSecrets:
     description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
     required: false
+  token:
+    description: 'A GitHub token'
+    required: true
+  codeCoverageSummaryDir:
+    description: 'The directory where the code coverage summary file is stored'
+    required: false
+    default: '_codeCoverage'
+  codeCoverageSummaryFile:
+    description: 'The name of the code coverage summary file'
+    required: false
+    default: 'SummaryGithub.md'
+  sbomOutputStorageAccountName:
+    description: 'The name of the storage account where the SBOM output will be stored'
+    required: false
+  sbomOutputStorageContainerName:
+    description: 'The name of the storage container where the SBOM output will be stored'
+    required: false
 
 outputs:
   semver:
@@ -72,12 +89,12 @@ runs:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
       with: 
         environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
-        secretsYamlBase64: ${{ secrets.buildSecrets}}
+        secretsYamlBase64: ${{ inputs.buildSecrets}}
     - name: Set defaults
       id: set_defaults
       run: |
-        echo "CODE_COVERAGE_SUMMARY_FILE=${{ vars.CODE_COVERAGE_SUMMARY_DIR || '_codeCoverage' }}" >> $GITHUB_ENV
-        echo "CODE_COVERAGE_SUMMARY_FILE=${{ vars.CODE_COVERAGE_SUMMARY_FILE || 'SummaryGithub.md' }}" >> $GITHUB_ENV
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_ENV
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_ENV
         echo "DEFAULT_BUILD_TASKS=${{ (lowercase(inputs.forcePublish) == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_ENV
       shell: bash
     - name: Debug Variables
@@ -89,7 +106,7 @@ runs:
       id: buildAzureCredentials_secret_check
       shell: bash
       run: |
-        if [ "${{ secrets.buildAzureCredentials }}" != '' ]; then
+        if [ "${{ inputs.buildAzureCredentials }}" != '' ]; then
           echo "available=true" >> $GITHUB_OUTPUT;
         else
           echo "available=false" >> $GITHUB_OUTPUT;
@@ -98,7 +115,7 @@ runs:
       if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
       uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
       with:
-        creds: ${{ secrets.buildAzureCredentials }}
+        creds: ${{ inputs.buildAzureCredentials }}
         enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/single-job-build-workflow
       id: run_build
@@ -113,9 +130,9 @@ runs:
         artifactName: ${{ inputs.buildArtifactName }}
         artifactPath: ${{ inputs.buildArtifactPath }}
       env:
-        BUILDVAR_AnalysisOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME}}
-        BUILDVAR_AnalysisOutputContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME}}
-        BUILDVAR_AnalysisOutputBlobPath: ${{ vars.SBOM_OUTPUT_STORAGE_BLOB_BASE_PATH }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
+        BUILDVAR_AnalysisOutputStorageAccountName: ${{ inputs.sbomOutputStorageAccountName}}
+        BUILDVAR_AnalysisOutputContainerName: ${{ inputs.sbomOutputStorageContainerName}}
+        BUILDVAR_AnalysisOutputBlobPath: ${{ inputs.sbomOutputStorageContainerName }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
         BUILDVAR_PublishCovenantOutputToStorage: true
         BUILDVAR_CovenantMetadata: >
           {
@@ -130,7 +147,7 @@ runs:
           [
             "trx;LogFilePrefix=test-results_"
           ]
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.token }}
         NUGET_API_KEY: ${{ env.NUGET_API_KEY }}
     - id: check_coverage_summary
       name: Check Code Coverage Summary Output
