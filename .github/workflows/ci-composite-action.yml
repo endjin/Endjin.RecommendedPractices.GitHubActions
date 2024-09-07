@@ -34,6 +34,9 @@ jobs:
       preReleaseTag: ${{ steps.run_build.outputs.preReleaseTag }}
 
     steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+      with:
+        fetch-depth: 0
     - uses: ./actions/run-build-process
       id: run_build
       with:
