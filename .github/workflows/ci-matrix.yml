@@ -3,6 +3,10 @@ on:
   pull_request:
     branches:
     - main
+    paths:
+    - .github/workflows/ci-matrix.yml
+    - .github/workflows/scripted-build-matrix-pipeline.yml
+    - actions/**
   workflow_dispatch:
     inputs:
       forcePublish:
