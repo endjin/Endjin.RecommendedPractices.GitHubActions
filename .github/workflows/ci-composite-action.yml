@@ -53,7 +53,7 @@ jobs:
         forcePublish: ${{ github.event.inputs.forcePublish == 'true' }}
         sbomOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME }}
         sbomOutputStorageContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME }}
-        buildEnv: ${{ steps.prepareEnvVarsAndSecrets.outputs.RESOLVED_ENV_VARS }}
-        buildSecrets: ${{ steps.prepareEnvVarsAndSecrets.outputs.RESOLVED_SECRETS }}
+        buildEnv: ${{ steps.prepareEnvVarsAndSecrets.outputs.environmentVariablesYamlBase64}}
+        buildSecrets: ${{ steps.prepareEnvVarsAndSecrets.outputs.secretsYamlBase64 }}
         token: ${{ secrets.GITHUB_TOKEN }}
 
