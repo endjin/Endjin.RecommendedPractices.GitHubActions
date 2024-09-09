@@ -9,7 +9,9 @@ Our standardised build process is divided into the following phases:
 - Package
 - Publish
 
-***NOTE**: By default, the 'Publish' phase is only executed for tagged versions or when manually triggered with the 'Force Publish' option enabled.*
+By default, the 'Publish' phase is only executed for tagged versions or when manually triggered with the 'Force Publish' option enabled.
+
+> ***USAGE TIP**: For smaller/less complex repositories, you will likely get the quickest build times by using the `run-build-process` composite action, an example of how to consume this in your repo's `build.yml` can be found [here](.github/workflows/ci-composite-action.yml)*.
 
 ## Reusable Workflows
 
