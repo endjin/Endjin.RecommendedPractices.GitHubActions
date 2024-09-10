@@ -1,21 +1,16 @@
-name: ci
+name: ci-single-job
 on:
   pull_request:
     branches:
     - main
     paths:
-    - .github/workflows/ci.yml
-    - .github/workflows/scripted-build-pipeline.yml
+    - .github/workflows/ci-single-job.yml
+    - .github/workflows/scripted-build-single-job-pipeline.yml
     - actions/**
   workflow_dispatch:
     inputs:
       forcePublish:
         description: When true the Publish stage will always be run, otherwise it only runs for tagged versions.
-        required: false
-        default: false
-        type: boolean
-      skipCleanup:
-        description: When true the pipeline clean-up stage will not be run. For example, the cache used between pipeline stages will be retained.
         required: false
         default: false
         type: boolean
@@ -56,16 +51,12 @@ jobs:
 
   build:
     needs: prepareConfig
-    uses: ./.github/workflows/scripted-build-pipeline.yml
+    uses: ./.github/workflows/scripted-build-single-job-pipeline.yml
     with:
       netSdkVersion: '8.x'
       # workflow_dispatch inputs are always strings, the type property is just for the UI
       forcePublish: ${{ github.event.inputs.forcePublish == 'true' }}
-      skipCleanup: ${{ github.event.inputs.skipCleanup == 'true' }}
-      publishPhaseEnv: ${{ needs.prepareConfig.outputs.RESOLVED_ENV_VARS }}
-      additionalCachePaths: |
-        tests
+      buildEnv: ${{ needs.prepareConfig.outputs.RESOLVED_ENV_VARS }}
     secrets:
-      compilePhaseAzureCredentials: ${{ secrets.ENDJIN_PROD_ACR_READER_CREDENTIALS }}
-      compilePhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
-      publishPhaseSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
+      buildAzureCredentials: ${{ secrets.ENDJIN_PROD_ACR_READER_CREDENTIALS }}
+      buildSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}

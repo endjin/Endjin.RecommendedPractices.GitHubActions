@@ -1,0 +1,212 @@
+name: 'Endjin.RecommendedPractices.Build.RunBuildProcess'
+description: 'Runs the standardised build process'
+inputs:
+  netSdkVersion:
+    description: The primary .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+    required: true
+    default: '8.0.x'
+  additionalNetSdkVersion:
+    description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+    required: false
+  pythonVersion:
+    description: Specify an additional Python version required for the build process
+    required: false
+  configuration:
+    description: The target build configuration.  
+    required: false
+    default: 'Release'
+  buildEnv:
+    description: A JSON object representing the environment variables required when running the build script.
+    required: false
+  buildArtifactName:
+    description: If set, during the test phase, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
+    required: false
+  buildArtifactPath:
+    description: If set, during the test phase, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
+    required: false
+  forcePublish:
+    description: When true, the Publish stage will be run regardless of the current branch or tag.
+    required: false
+    default: 'false'
+  buildScriptPath:
+    description: The path to the build script to run.
+    required: false
+    default: ./build.ps1
+  buildTasks:
+    description: The tasks that need to be run as part of the build process, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
+    required: false
+    default: ''
+  runsOn:
+    description: The operating system to run all stages of this workflow.
+    required: false
+    default: ubuntu-latest
+  # Secrets
+  buildAzureCredentials:
+    description: A secret containing the Azure credentials required to run the build process.
+    required: false
+  buildSecrets:
+    description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
+    required: false
+  token:
+    description: 'A GitHub token'
+    required: true
+  codeCoverageSummaryDir:
+    description: 'The directory where the code coverage summary file is stored'
+    required: false
+    default: '_codeCoverage'
+  codeCoverageSummaryFile:
+    description: 'The name of the code coverage summary file'
+    required: false
+    default: 'SummaryGithub.md'
+  sbomOutputStorageAccountName:
+    description: 'The name of the storage account where the SBOM output will be stored'
+    required: false
+  sbomOutputStorageContainerName:
+    description: 'The name of the storage container where the SBOM output will be stored'
+    required: false
+
+outputs:
+  semver:
+    description: "The full SemVer version number of the current build"
+    value: ${{ steps.run_script.outputs.SemVer }}
+  major:
+    description: "The major version component of the current build"
+    value: ${{ steps.run_script.outputs.Major }}
+  majorMinor:
+    description: "The major & minor components of the current build"
+    value: ${{ steps.run_script.outputs.Major }}.${{ steps.run_script.outputs.Minor }}
+  preReleaseTag:
+    description: "The pre-release tag, if any, of the current build"
+    value: ${{ steps.run_script.outputs.PreReleaseTag }}
+
+runs:
+  using: "composite"  
+  steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+      with: 
+        environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
+        secretsYamlBase64: ${{ inputs.buildSecrets}}
+    - name: Set defaults
+      id: set_defaults
+      run: |
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_ENV
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_ENV
+        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_ENV
+      shell: bash
+    - name: Debug Variables
+      if: env.ACTIONS_RUNNER_DEBUG == 'true'
+      run: |
+        gci env:/ | fl | out-string | Write-Host
+      shell: pwsh
+    - name: Check if buildAzureCredentials secret is set
+      id: buildAzureCredentials_secret_check
+      shell: bash
+      run: |
+        if [ "${{ inputs.buildAzureCredentials }}" != '' ]; then
+          echo "available=true" >> $GITHUB_OUTPUT;
+        else
+          echo "available=false" >> $GITHUB_OUTPUT;
+        fi
+    - name: Azure CLI login
+      if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
+      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
+      with:
+        creds: ${{ inputs.buildAzureCredentials }}
+        enable-AzPSSession: true
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      id: run_build
+      with:
+        displayName: Run Build
+        buildScriptPath: ${{ inputs.buildScriptPath }}
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        pythonVersion: ${{ inputs.pythonVersion }}
+        tasks: ${{ inputs.buildTasks != '' && inputs.buildTasks || steps.set_defaults.outputs.DEFAULT_BUILD_TASKS }}
+        configuration: ${{ inputs.configuration }}
+        artifactName: ${{ inputs.buildArtifactName }}
+        artifactPath: ${{ inputs.buildArtifactPath }}
+      env:
+        BUILDVAR_AnalysisOutputStorageAccountName: ${{ inputs.sbomOutputStorageAccountName}}
+        BUILDVAR_AnalysisOutputContainerName: ${{ inputs.sbomOutputStorageContainerName}}
+        BUILDVAR_AnalysisOutputBlobPath: ${{ inputs.sbomOutputStorageContainerName }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
+        BUILDVAR_PublishCovenantOutputToStorage: true
+        BUILDVAR_CovenantMetadata: >
+          {
+            "git_provider": "github",
+            "git_org": "${{ github.repository_owner }}",
+            "git_repo": "${{ github.event.repository.name }}",
+            "git_branch": "${{ github.ref_name }}", 
+            "git_sha": "${{ github.sha }}"
+          }
+        BUILDVAR_TestReportTypes: HtmlInline;Cobertura
+        BUILDVAR_DotNetTestLoggers: >
+          [
+            "trx;LogFilePrefix=test-results_"
+          ]
+        GITHUB_TOKEN: ${{ inputs.token }}
+        NUGET_API_KEY: ${{ env.NUGET_API_KEY }}
+    - id: check_coverage_summary
+      name: Check Code Coverage Summary Output
+      if: always()
+      run: |
+        # check if the code coverage summary file exists, but ensure the build doesn't fail if it can't be found
+        try {
+          $coverageFile = Join-Path $env:CODE_COVERAGE_SUMMARY_DIR $env:CODE_COVERAGE_SUMMARY_FILE
+          Write-Host "Checking for code coverage file: $coverageFile"
+          if (Test-Path $coverageFile) {
+            Write-Host "Code coverage summary file exists"
+            echo "EXISTS=true" >> $env:GITHUB_OUTPUT
+          }
+        }
+        catch {}
+      shell: pwsh
+      env:
+        CODE_COVERAGE_SUMMARY_DIR: ${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_DIR }}
+        CODE_COVERAGE_SUMMARY_FILE: ${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_FILE }}
+    - id: check_os
+      name: Check Runner OS
+      if: always()
+      run: |
+        # store the runner's operating system (i.e. distinct from the OS version info available via runner image)
+        if ($IsWindows) {
+          $RunnerOs = "windows"
+        } 
+        elseif ($IsLinux) {
+            $RunnerOs = "linux"
+        }
+        elseif ($IsMacOS) {
+            $RunnerOs = "macos"
+        }
+        else {
+            $RunnerOs = "Unknown"
+        }
+        Write-Host "Runner OS: $RunnerOs"
+        echo "RUNNEROS=$RunnerOs" >> $env:GITHUB_OUTPUT
+      shell: pwsh
+    - name: Add Code Coverage PR comment
+      # TODO: Test whether this works when running from a fork?
+      if: always() && steps.check_coverage_summary.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
+      uses: marocchino/sticky-pull-request-comment@331f8f5b4215f0445d3c07b4967662a32a2d3e31    # v2.9.0
+      with:
+        recreate: true
+        path: ${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_DIR }}/${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_FILE }}
+        header: ${{ inputs.runsOn }}
+    # Conditional test result publishing as we can't use the docker version of the action on Windows
+    - name: Publish Test Results (Linux)
+      uses: EnricoMi/publish-unit-test-result-action@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
+      if: always() && steps.check_os.outputs.RUNNEROS == 'linux'
+      with:
+        nunit_files: "*TestResults.xml"    # produced by Pester
+        trx_files: "**/test-results_*.trx" # produced by dotnet test
+        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
+    - name: Publish Test Results (Windows)
+      uses: EnricoMi/publish-unit-test-result-action/windows@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
+      if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
+      with:
+        nunit_files: "*TestResults.xml"    # produced by Pester
+        trx_files: "**/test-results_*.trx" # produced by dotnet test
+        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave

@@ -88,6 +88,7 @@ runs:
       python-version: '${{ inputs.pythonVersion }}'
 
   - name: Debug cache paths (before)
+    if: inputs.inputCachePaths != ''
     run: |
       echo "inputCachePaths: ${{ inputs.inputCachePaths }}"
       echo "outputCachePaths: ${{ inputs.outputCachePaths }}"
@@ -103,6 +104,7 @@ runs:
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - id: cache_debug
+    if: inputs.inputCachePaths != ''
     run: |
       echo "CacheHit: '${{ steps.cache_inputs_restore.outputs.cache-hit }}'"
     shell: bash

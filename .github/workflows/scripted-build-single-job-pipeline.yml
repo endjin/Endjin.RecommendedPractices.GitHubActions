@@ -1,0 +1,94 @@
+on:
+  workflow_call:
+    inputs:
+      netSdkVersion:
+        description: The primary .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+        required: true
+        type: string
+        default: '8.0.x'
+      additionalNetSdkVersion:
+        description: An additional .NET SDK version required for the build process, as per the syntax required by the 'setup-dotnet' action.
+        required: false
+        type: string
+      pythonVersion:
+        description: Specify an additional Python version required for the build process
+        required: false
+        type: string
+      configuration:
+        description: The target build configuration.  
+        required: false
+        default: 'Release'
+        type: string
+      buildEnv:
+        description: A JSON object representing the environment variables required when running the build script.
+        required: false
+        type: string
+      buildArtifactName:
+        description: If set, during the test phase, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
+        required: false
+        type: string
+      buildArtifactPath:
+        description: If set, during the test phase, uploads a GitHub artifact with the provided path (name must be specified in `artifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline demiliter.
+        required: false
+        type: string
+      forcePublish:
+        description: When true, the Publish stage will be run regardless of the current branch or tag.
+        required: false
+        default: false
+        type: boolean
+      buildScriptPath:
+        description: The path to the build script to run.
+        required: false
+        default: ./build.ps1
+        type: string
+      buildTasks:
+        description: The tasks that need to be run as part of the build process, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
+        required: false
+        default: ''
+        type: string
+      runsOn:
+        description: The operating system to run all stages of this workflow.
+        required: false
+        default: ubuntu-latest
+        type: string
+
+    secrets:
+      buildAzureCredentials:
+        required: false
+      buildSecrets:
+        description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
+        required: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ inputs.runsOn }}
+    outputs:
+      semver: ${{ steps.run_build.outputs.semver }}
+      major: ${{ steps.run_build.outputs.major }}
+      majorMinor: ${{ steps.run_build.outputs.majorMinor }}
+      preReleaseTag: ${{ steps.run_build.outputs.preReleaseTag }}
+
+    steps:
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-build-process@main
+      id: run_build
+      with:
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        buildArtifactName:  ${{ inputs.buildArtifactName }}
+        buildArtifactPath: ${{ inputs.buildArtifactPath }}
+        buildScriptPath: ${{ inputs.buildScriptPath }}
+        buildTasks: ${{ inputs.buildTasks }}
+        codeCoverageSummaryDir: ${{ vars.CODE_COVERAGE_SUMMARY_DIR || '_codeCoverage' }}
+        codeCoverageSummaryFile: ${{ vars.CODE_COVERAGE_SUMMARY_FILE || 'SummaryGithub.md' }}
+        configuration: ${{ inputs.configuration }}
+        pythonVersion: ${{ inputs.pythonVersion }}
+        runsOn: ${{ inputs.runsOn }}
+        # workflow_dispatch inputs are always strings, the type property is just for the UI
+        forcePublish: ${{ github.event.inputs.forcePublish == 'true' }}
+        sbomOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME }}
+        sbomOutputStorageContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME }}
+        buildEnv: ${{ inputs.buildEnv }}
+        buildSecrets: ${{ secrets.buildSecrets }}
+        buildAzureCredentials: ${{ secrets.buildAzureCredentials }}
+        token: ${{ secrets.GITHUB_TOKEN }}
