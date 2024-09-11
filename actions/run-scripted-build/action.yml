@@ -113,6 +113,7 @@ runs:
     name: ${{ inputs.displayName }}
     run: |
       $tasks = "${{ inputs.tasks }}" -split ","
+      Write-Host "Running Tasks: $tasks"
       ${{ inputs.buildScriptPath }} -Tasks $tasks `
                   -Configuration ${{ inputs.configuration }}
     shell: pwsh
