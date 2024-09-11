@@ -93,9 +93,11 @@ runs:
     - name: Set defaults
       id: set_defaults
       run: |
-        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_ENV
-        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_ENV
-        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_ENV
+        echo "inputs: ${{ toJson(inputs) }}"
+        echo "ref: ${{ github.ref }}"
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_OUTPUT
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_OUTPUT
+        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_OUTPUT
       shell: bash
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
@@ -113,12 +115,13 @@ runs:
         fi
     - name: Azure CLI login
       if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@6c251865b4e6290e7b78be643ea2d005bc51f69a    # v2.1.1
+      uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
       with:
         creds: ${{ inputs.buildAzureCredentials }}
         enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_build
+      name: Run Build
       with:
         displayName: Run Build
         buildScriptPath: ${{ inputs.buildScriptPath }}
