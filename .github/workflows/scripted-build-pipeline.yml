@@ -270,14 +270,14 @@ jobs:
         header: ${{ inputs.runsOn }}
     # Conditional test result publishing as we can't use the docker version of the action on Windows
     - name: Publish Test Results (Linux)
-      uses: EnricoMi/publish-unit-test-result-action@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
+      uses: EnricoMi/publish-unit-test-result-action@82082dac68ad6a19d980f8ce817e108b9f496c2a   # v2.17.1
       if: always() && steps.check_os.outputs.RUNNEROS == 'linux'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
         junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
     - name: Publish Test Results (Windows)
-      uses: EnricoMi/publish-unit-test-result-action/windows@30eadd5010312f995f0d3b3cff7fe2984f69409e   # v2.16.1
+      uses: EnricoMi/publish-unit-test-result-action/windows@82082dac68ad6a19d980f8ce817e108b9f496c2a   # v2.17.1
       if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
