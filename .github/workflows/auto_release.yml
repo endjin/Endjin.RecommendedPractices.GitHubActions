@@ -158,7 +158,7 @@ jobs:
         EOF
         echo "is_release_pending : ${{ steps.get_release_pending_pr_list.outputs.is_release_pending }}"
 
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
     - name: Read pr-autoflow configuration
       id: get_pr_autoflow_config
       uses: endjin/pr-autoflow/actions/read-configuration@v4
@@ -211,7 +211,7 @@ jobs:
       with:
         dotnet-version: '6.x'
 
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       with:
         # ensure we are creating the release tag on the default branch
         ref: ${{ needs.lookup_default_branch.outputs.branch_name }}
