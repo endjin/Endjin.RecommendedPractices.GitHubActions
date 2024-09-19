@@ -115,7 +115,7 @@ runs:
         fi
     - name: Azure CLI login
       if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
       with:
         creds: ${{ inputs.buildAzureCredentials }}
         enable-AzPSSession: true

@@ -138,7 +138,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -200,7 +200,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -313,7 +313,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.packagePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
@@ -369,7 +369,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: endjin/login@4ae41681a03e0285d0a85d578968b6ba937c23ee     # forked version including hotfix from https://github.com/Azure/login/pull/431
+      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
