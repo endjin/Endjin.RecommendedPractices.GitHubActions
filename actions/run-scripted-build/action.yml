@@ -97,7 +97,7 @@ runs:
   - name: Restore Cached Inputs
     if: inputs.inputCachePaths != ''
     id: cache_inputs_restore
-    uses: actions/cache/restore@3624ceb22c1c5a301c8db4169662070a689d9ea8    # v4.1.1
+    uses: actions/cache/restore@6849a6489940f00c2f30c0fb92c6274307ccb58a    # v4.1.2
     with:
       path: ${{ inputs.inputCachePaths }}
       key: build-state-${{ github.sha }}
@@ -124,7 +124,7 @@ runs:
   - name: Save Cached Outputs
     id: cache_outputs_save
     if: inputs.outputCachePaths
-    uses: actions/cache/save@3624ceb22c1c5a301c8db4169662070a689d9ea8    # v4.1.1
+    uses: actions/cache/save@6849a6489940f00c2f30c0fb92c6274307ccb58a    # v4.1.2
     with:
       path: ${{ inputs.outputCachePaths }}
       key: build-state-${{ github.sha }}
