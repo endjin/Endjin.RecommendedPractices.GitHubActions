@@ -118,7 +118,7 @@ runs:
                   -Configuration ${{ inputs.configuration }}
     shell: pwsh
     env:
-      GH_TOKEN: ${{ env.GH_TOKEN != '' ? env.GH_TOKEN | github.token }}
+      GH_TOKEN: ${{ env.GH_TOKEN != '' && env.GH_TOKEN || github.token }}
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
 
   - name: Save Cached Outputs
