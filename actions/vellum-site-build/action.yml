@@ -24,7 +24,7 @@ runs:
       restore-keys: |
         ${{ runner.os }}-npm-
 
-  - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@feature/update-vellum-composite-action
+  - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
     id: build
     with:
       additionalNetSdkVersion: '9.x'

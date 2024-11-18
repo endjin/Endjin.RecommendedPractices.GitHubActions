@@ -41,7 +41,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/vellum-site-build@feature/update-vellum-composite-action
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/vellum-site-build@main
       id: build
       with:
         githubVellumPat: ${{ inputs.github_reader_pat }}
