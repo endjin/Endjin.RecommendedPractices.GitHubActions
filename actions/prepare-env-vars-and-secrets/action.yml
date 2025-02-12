@@ -33,7 +33,6 @@ runs:
       $yaml = ConvertFrom-Yaml $srcEnvVars | ConvertTo-Yaml
       Write-Host "yaml: $yaml"
       $yamlb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($yaml))
-      Write-Host "yamlb64: $yamlb64"
       ("RESOLVED_ENV_VARS={0}" -f $yamlb64) | Out-File -Append $env:GITHUB_OUTPUT
     shell: pwsh
 
@@ -48,6 +47,6 @@ runs:
       $yaml = ConvertFrom-Yaml $srcSecrets | ConvertTo-Yaml
       Write-Host "yaml: $yaml"
       $yamlb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($yaml))
-      Write-Host "yamlb64: $yamlb64"
+      Write-Host ("::add-mask::{0}" -f $yamlb64)
       ("RESOLVED_SECRETS={0}" -f $yamlb64) | Out-File -Append $env:GITHUB_OUTPUT
     shell: pwsh
