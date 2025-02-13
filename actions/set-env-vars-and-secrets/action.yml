@@ -19,20 +19,25 @@ runs:
   - id: setEnvironmentVariables
     name: Set Environment Variables
     run: |
-      $envVarsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.environmentVariablesYamlBase64 }}"))
+      $envVarsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($env:INCOMING_ENV_VARS))
       $envVars = ConvertFrom-Yaml $envVarsYaml
       foreach ($envVarName in $envVars.Keys) {
         ('{0}={1}' -f $envVarName, $envVars[$envVarName]) | Out-File -Append -FilePath $env:GITHUB_ENV
       }
     shell: pwsh
+    env:
+      INCOMING_ENV_VARS: ${{ inputs.environmentVariablesYamlBase64 }}
   - id: setSecrets
     name: Set Secrets
     run: |
       Import-Module Powershell-yaml
-      $secretsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String("${{ inputs.secretsYamlBase64 }}"))
+      Write-Host ("::add-mask::{0}" -f $env:INCOMING_SECRETS)
+      $secretsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($env:INCOMING_SECRETS))
       $secrets = ConvertFrom-Yaml $secretsYaml
       foreach ($secretName in $secrets.Keys) {
         ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
         Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
       }
     shell: pwsh
+    env:
+      INCOMING_SECRETS: ${{ inputs.secretsYamlBase64 }}
