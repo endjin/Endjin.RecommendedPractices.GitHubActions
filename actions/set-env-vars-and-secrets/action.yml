@@ -3,10 +3,13 @@ description: 'Injects environment variables and secrets passed as YAML-formatted
 inputs:
   environmentVariablesYamlBase64:
     description: A Base64-encoded YAML object representing environment variables that need to be set for the current job.
-    default: 'ewB9AA=='   # '{}'
+    default: 'ewB9AA=='   # '{}' TODO!
   secretsYamlBase64:
     description: A Base64-encoded YAML object representing secrets that need to be set for the current job.
-    default: 'ewB9AA=='   # '{}'
+    default: 'ewB9AA=='   # '{}' TODO!
+  # secretsEncryptionKey:
+  #   description: A string representing the shared secret used to decrypt the secrets YAML object.
+  #   required: true
 
 runs:
   using: "composite"
@@ -31,8 +34,8 @@ runs:
     name: Set Secrets
     run: |
       Import-Module Powershell-yaml
-      Write-Host ("::add-mask::{0}" -f $env:INCOMING_SECRETS)
-      $secretsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($env:INCOMING_SECRETS))
+      $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
+      $secretsYaml = ConvertFrom-SecureString (ConvertTo-SecureString $env:INCOMING_SECRETS -Key $keyBytes) -AsPlainText
       $secrets = ConvertFrom-Yaml $secretsYaml
       foreach ($secretName in $secrets.Keys) {
         ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
@@ -41,3 +44,4 @@ runs:
     shell: pwsh
     env:
       INCOMING_SECRETS: ${{ inputs.secretsYamlBase64 }}
+      SECRETS_ENCRYPTION_KEY: ${{ secrets.WORKFLOW_SHARED_KEY }}

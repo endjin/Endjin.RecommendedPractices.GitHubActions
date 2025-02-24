@@ -7,6 +7,9 @@ inputs:
   secretsYaml:
     description: A YAML object representing secrets that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
     default: '{}'
+  # secretsEncryptionKey:
+  #   description: A string representing the shared secret used to encrypt the secrets YAML object.
+  #   required: true
 outputs:
   environmentVariablesYamlBase64:
     description: Base64-encoded YAML object representing environment variables that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
@@ -46,7 +49,9 @@ runs:
       Write-Host "REQUIRED_SECRETS: $srcSecrets"
       $yaml = ConvertFrom-Yaml $srcSecrets | ConvertTo-Yaml
       Write-Host "yaml: $yaml"
-      $yamlb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($yaml))
-      Write-Host ("::add-mask::{0}" -f $yamlb64)
-      ("RESOLVED_SECRETS={0}" -f $yamlb64) | Out-File -Append $env:GITHUB_OUTPUT
+      $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
+      $secureYaml = ConvertFrom-SecureString (ConvertTo-SecureString $yaml -AsPlainText) -Key $keyBytes
+      ("RESOLVED_SECRETS={0}" -f $secureYaml) | Out-File -Append $env:GITHUB_OUTPUT
     shell: pwsh
+    env:
+      SECRETS_ENCRYPTION_KEY: ${{ secrets.WORKFLOW_SHARED_KEY }}

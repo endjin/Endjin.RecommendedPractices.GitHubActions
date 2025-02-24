@@ -90,6 +90,7 @@ runs:
       with: 
         environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
         secretsYamlBase64: ${{ inputs.buildSecrets}}
+        # secretsEncryptionKey: ${{ secrets.WORKFLOW_SHARED_KEY }}
     - name: Set defaults
       id: set_defaults
       run: |
