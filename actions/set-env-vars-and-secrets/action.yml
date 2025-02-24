@@ -7,9 +7,9 @@ inputs:
   secretsYamlBase64:
     description: A Base64-encoded YAML object representing secrets that need to be set for the current job.
     default: 'ewB9AA=='   # '{}' TODO!
-  # secretsEncryptionKey:
-  #   description: A string representing the shared secret used to decrypt the secrets YAML object.
-  #   required: true
+  secretsEncryptionKey:
+    description: A string representing the shared secret used to decrypt the secrets YAML object.
+    required: true
 
 runs:
   using: "composite"
@@ -44,4 +44,4 @@ runs:
     shell: pwsh
     env:
       INCOMING_SECRETS: ${{ inputs.secretsYamlBase64 }}
-      SECRETS_ENCRYPTION_KEY: ${{ secrets.WORKFLOW_SHARED_KEY }}
+      SECRETS_ENCRYPTION_KEY: ${{ inputs.secretsEncryptionKey }}

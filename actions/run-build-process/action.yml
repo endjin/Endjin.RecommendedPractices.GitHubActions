@@ -64,6 +64,9 @@ inputs:
   sbomOutputStorageContainerName:
     description: 'The name of the storage container where the SBOM output will be stored'
     required: false
+  secretsEncryptionKey:
+    description: A string representing the shared secret used to encrypt the secrets YAML object.
+    required: true
 
 outputs:
   semver:
@@ -86,11 +89,11 @@ runs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/secrets-passing
       with: 
         environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
         secretsYamlBase64: ${{ inputs.buildSecrets}}
-        # secretsEncryptionKey: ${{ secrets.WORKFLOW_SHARED_KEY }}
+        secretsEncryptionKey: ${{ inputs.secretsEncryptionKey }}
     - name: Set defaults
       id: set_defaults
       run: |
