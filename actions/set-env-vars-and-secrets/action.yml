@@ -17,7 +17,7 @@ runs:
   - id: installPsYaml
     name: Install PowerShell YAML module
     run: |
-      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose:$false
       Import-Module Powershell-yaml -Verbose:$false
     shell: pwsh   
   - id: setEnvironmentVariables

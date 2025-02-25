@@ -24,7 +24,8 @@ runs:
   - id: installPsYaml
     name: Install PowerShell YAML module
     run: |
-      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose:$false
+      Import-Module Powershell-yaml -Verbose:$false
     shell: pwsh 
   - id: prepareEnvVars
     name: Prepare Environment Variables
@@ -42,7 +43,6 @@ runs:
   - id: prepareSecrets
     name: Prepare Secrets
     run: |
-      Import-Module Powershell-yaml
       $srcSecrets = @'
       ${{ inputs.secretsYaml }}
       '@
