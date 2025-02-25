@@ -18,6 +18,7 @@ runs:
     name: Install PowerShell YAML module
     run: |
       Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+      Import-Module Powershell-yaml -Verbose:$false
     shell: pwsh   
   - id: setEnvironmentVariables
     name: Set Environment Variables
@@ -33,8 +34,7 @@ runs:
   - id: setSecrets
     name: Set Secrets
     run: |
-      if ($env:INCOMING_ENV_VARS) {
-        Import-Module Powershell-yaml
+      if (![string]::IsNullOrEmpty($env:INCOMING_SECRETS)) {
         $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
         $secretsYaml = ConvertFrom-SecureString (ConvertTo-SecureString $env:INCOMING_SECRETS -Key $keyBytes) -AsPlainText
         $secrets = ConvertFrom-Yaml $secretsYaml
