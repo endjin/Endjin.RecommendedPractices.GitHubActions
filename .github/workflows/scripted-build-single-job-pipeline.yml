@@ -58,6 +58,9 @@ on:
       buildSecrets:
         description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
         required: false
+      secretsEncryptionKey:
+        description: A string representing the shared secret used to encrypt the secrets YAML object.
+        required: false
 
 jobs:
   build:
@@ -92,3 +95,4 @@ jobs:
         buildSecrets: ${{ secrets.buildSecrets }}
         buildAzureCredentials: ${{ secrets.buildAzureCredentials }}
         token: ${{ secrets.GITHUB_TOKEN }}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}

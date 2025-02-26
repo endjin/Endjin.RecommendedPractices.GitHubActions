@@ -9,7 +9,7 @@ inputs:
     required: false
   secretsEncryptionKey:
     description: A string representing the shared secret used to decrypt the secrets YAML object.
-    required: true
+    required: false
 
 runs:
   using: "composite"
@@ -35,12 +35,17 @@ runs:
     name: Set Secrets
     run: |
       if (![string]::IsNullOrEmpty($env:INCOMING_SECRETS)) {
-        $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
-        $secretsYaml = ConvertFrom-SecureString (ConvertTo-SecureString $env:INCOMING_SECRETS -Key $keyBytes) -AsPlainText
-        $secrets = ConvertFrom-Yaml $secretsYaml
-        foreach ($secretName in $secrets.Keys) {
-          ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
-          Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
+        if ([string]::IsNullOrEmpty($env:SECRETS_ENCRYPTION_KEY)) {
+          Write-Warning "Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
+        }
+        else {
+          $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
+          $secretsYaml = ConvertFrom-SecureString (ConvertTo-SecureString $env:INCOMING_SECRETS -Key $keyBytes) -AsPlainText
+          $secrets = ConvertFrom-Yaml $secretsYaml
+          foreach ($secretName in $secrets.Keys) {
+            ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
+            Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
+          }
         }
       }
     shell: pwsh

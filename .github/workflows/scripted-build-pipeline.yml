@@ -100,7 +100,7 @@ on:
         required: false
       secretsEncryptionKey:
         description: A string representing the shared secret used to encrypt the secrets YAML object.
-        required: true
+        required: false
 
 env:
   CODE_COVERAGE_SUMMARY_DIR: ${{ vars.CODE_COVERAGE_SUMMARY_DIR || '_codeCoverage' }}
