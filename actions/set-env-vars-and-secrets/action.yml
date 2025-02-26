@@ -6,7 +6,10 @@ inputs:
     default: 'ewB9AA=='   # '{}'
   secretsYamlBase64:
     description: A Base64-encoded YAML object representing secrets that need to be set for the current job.
-    default: 'ewB9AA=='   # '{}'
+    required: false
+  secretsEncryptionKey:
+    description: A string representing the shared secret used to decrypt the secrets YAML object.
+    required: false
 
 runs:
   using: "composite"
@@ -14,7 +17,8 @@ runs:
   - id: installPsYaml
     name: Install PowerShell YAML module
     run: |
-      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose:$false
+      Import-Module Powershell-yaml -Verbose:$false
     shell: pwsh   
   - id: setEnvironmentVariables
     name: Set Environment Variables
@@ -30,14 +34,20 @@ runs:
   - id: setSecrets
     name: Set Secrets
     run: |
-      Import-Module Powershell-yaml
-      Write-Host ("::add-mask::{0}" -f $env:INCOMING_SECRETS)
-      $secretsYaml = [System.Text.Encoding]::Unicode.GetString([Convert]::FromBase64String($env:INCOMING_SECRETS))
-      $secrets = ConvertFrom-Yaml $secretsYaml
-      foreach ($secretName in $secrets.Keys) {
-        ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
-        Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
+      if ([string]::IsNullOrEmpty($env:SECRETS_ENCRYPTION_KEY)) {
+        Write-Host "::warning title=Secrets skipped::Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
+        Write-Warning "Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
+      }
+      elseif (![string]::IsNullOrEmpty($env:INCOMING_SECRETS)) {
+        $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
+        $secretsYaml = ConvertFrom-SecureString (ConvertTo-SecureString $env:INCOMING_SECRETS -Key $keyBytes) -AsPlainText
+        $secrets = ConvertFrom-Yaml $secretsYaml
+        foreach ($secretName in $secrets.Keys) {
+          ('{0}={1}' -f $secretName, $secrets[$secretName]) | Out-File -Append -FilePath $env:GITHUB_ENV
+          Write-Host ("::add-mask::{0}" -f $secrets[$secretName])
+        }
       }
     shell: pwsh
     env:
       INCOMING_SECRETS: ${{ inputs.secretsYamlBase64 }}
+      SECRETS_ENCRYPTION_KEY: ${{ inputs.secretsEncryptionKey }}

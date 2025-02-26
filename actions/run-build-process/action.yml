@@ -64,6 +64,9 @@ inputs:
   sbomOutputStorageContainerName:
     description: 'The name of the storage container where the SBOM output will be stored'
     required: false
+  secretsEncryptionKey:
+    description: A string representing the shared secret used to encrypt the secrets YAML object.
+    required: false
 
 outputs:
   semver:
@@ -90,6 +93,7 @@ runs:
       with: 
         environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
         secretsYamlBase64: ${{ inputs.buildSecrets}}
+        secretsEncryptionKey: ${{ inputs.secretsEncryptionKey }}
     - name: Set defaults
       id: set_defaults
       run: |

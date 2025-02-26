@@ -7,6 +7,9 @@ inputs:
   secretsYaml:
     description: A YAML object representing secrets that need to be passed into the 'scripted-build-pipeline' re-usable workflow via its '*PhaseSecrets' inputs.
     default: '{}'
+  secretsEncryptionKey:
+    description: A string representing the shared secret used to encrypt the secrets YAML object.
+    required: false
 outputs:
   environmentVariablesYamlBase64:
     description: Base64-encoded YAML object representing environment variables that can be passed to the 'scripted-build-pipeline' re-usable workflow via its '*PhaseEnv' inputs.
@@ -21,7 +24,8 @@ runs:
   - id: installPsYaml
     name: Install PowerShell YAML module
     run: |
-      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose
+      Install-Module Powershell-yaml -Scope CurrentUser -Force -Verbose:$false
+      Import-Module Powershell-yaml -Verbose:$false
     shell: pwsh 
   - id: prepareEnvVars
     name: Prepare Environment Variables
@@ -39,14 +43,21 @@ runs:
   - id: prepareSecrets
     name: Prepare Secrets
     run: |
-      Import-Module Powershell-yaml
-      $srcSecrets = @'
+      if ([string]::IsNullOrEmpty($env:SECRETS_ENCRYPTION_KEY)) {
+          Write-Host "::warning title=Secrets skipped::Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
+          Write-Warning "Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
+      }
+      else {
+        $srcSecrets = @'
       ${{ inputs.secretsYaml }}
       '@
-      Write-Host "REQUIRED_SECRETS: $srcSecrets"
-      $yaml = ConvertFrom-Yaml $srcSecrets | ConvertTo-Yaml
-      Write-Host "yaml: $yaml"
-      $yamlb64 = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($yaml))
-      Write-Host ("::add-mask::{0}" -f $yamlb64)
-      ("RESOLVED_SECRETS={0}" -f $yamlb64) | Out-File -Append $env:GITHUB_OUTPUT
+        Write-Host "REQUIRED_SECRETS: $srcSecrets"
+        $yaml = ConvertFrom-Yaml $srcSecrets | ConvertTo-Yaml
+        Write-Host "yaml: $yaml"
+        $keyBytes = [Convert]::FromBase64String($env:SECRETS_ENCRYPTION_KEY)
+        $secureYaml = ConvertFrom-SecureString (ConvertTo-SecureString $yaml -AsPlainText) -Key $keyBytes
+        ("RESOLVED_SECRETS={0}" -f $secureYaml) | Out-File -Append $env:GITHUB_OUTPUT
+      }
     shell: pwsh
+    env:
+      SECRETS_ENCRYPTION_KEY: ${{ inputs.secretsEncryptionKey }}

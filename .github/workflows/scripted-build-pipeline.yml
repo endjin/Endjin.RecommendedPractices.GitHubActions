@@ -98,6 +98,9 @@ on:
       publishPhaseSecrets:
         description: A YAML string representing a dictionary of secrets required when running the 'publish' stage of this workflow.
         required: false
+      secretsEncryptionKey:
+        description: A string representing the shared secret used to encrypt the secrets YAML object.
+        required: false
 
 env:
   CODE_COVERAGE_SUMMARY_DIR: ${{ vars.CODE_COVERAGE_SUMMARY_DIR || '_codeCoverage' }}
@@ -122,6 +125,7 @@ jobs:
       with: 
         environmentVariablesYamlBase64: ${{ inputs.compilePhaseEnv}}
         secretsYamlBase64: ${{ secrets.compilePhaseSecrets}}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
@@ -184,6 +188,7 @@ jobs:
       with: 
         environmentVariablesYamlBase64: ${{ inputs.testPhaseEnv}}
         secretsYamlBase64: ${{ secrets.testPhaseSecrets}}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
@@ -297,6 +302,7 @@ jobs:
       with: 
         environmentVariablesYamlBase64: ${{ inputs.packagePhaseEnv}}
         secretsYamlBase64: ${{ secrets.packagePhaseSecrets}}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
@@ -353,6 +359,7 @@ jobs:
       with: 
         environmentVariablesYamlBase64: ${{ inputs.publishPhaseEnv}}
         secretsYamlBase64: ${{ secrets.publishPhaseSecrets}}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
     - name: Debug Variables
       if: env.ACTIONS_RUNNER_DEBUG == 'true'
       run: |
