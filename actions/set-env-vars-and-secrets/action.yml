@@ -35,6 +35,7 @@ runs:
     name: Set Secrets
     run: |
       if ([string]::IsNullOrEmpty($env:SECRETS_ENCRYPTION_KEY)) {
+        Write-Host "::warning title=Secrets skipped::Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
         Write-Warning "Secrets cannot processed due to the encryption key not being provided. The calling workflow should ensure that the 'secretsEncryptionKey' input is set. The value is typically stored in the SHARED_WORKFLOW_KEY secret."
       }
       elseif (![string]::IsNullOrEmpty($env:INCOMING_SECRETS)) {
