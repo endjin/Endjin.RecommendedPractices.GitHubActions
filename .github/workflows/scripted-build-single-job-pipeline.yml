@@ -73,7 +73,7 @@ jobs:
       preReleaseTag: ${{ steps.run_build.outputs.preReleaseTag }}
 
     steps:
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-build-process@feature/secrets-passing
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-build-process@main
       id: run_build
       with:
         netSdkVersion: ${{ inputs.netSdkVersion }}
