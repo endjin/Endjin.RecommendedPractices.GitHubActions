@@ -121,7 +121,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/secrets-passing
       with: 
         environmentVariablesYamlBase64: ${{ inputs.compilePhaseEnv}}
         secretsYamlBase64: ${{ secrets.compilePhaseSecrets}}
@@ -184,7 +184,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/secrets-passing
       with: 
         environmentVariablesYamlBase64: ${{ inputs.testPhaseEnv}}
         secretsYamlBase64: ${{ secrets.testPhaseSecrets}}
@@ -298,7 +298,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 #v4.1.1
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/secrets-passing
       with: 
         environmentVariablesYamlBase64: ${{ inputs.packagePhaseEnv}}
         secretsYamlBase64: ${{ secrets.packagePhaseSecrets}}
@@ -355,7 +355,7 @@ jobs:
     - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11   #v4.1.1
       with:
         fetch-depth: 0
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@feature/secrets-passing
       with: 
         environmentVariablesYamlBase64: ${{ inputs.publishPhaseEnv}}
         secretsYamlBase64: ${{ secrets.publishPhaseSecrets}}
