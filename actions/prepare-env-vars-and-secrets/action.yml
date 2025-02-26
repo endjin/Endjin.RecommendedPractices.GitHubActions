@@ -48,8 +48,8 @@ runs:
       }
       else {
         $srcSecrets = @'
-        ${{ inputs.secretsYaml }}
-        '@
+      ${{ inputs.secretsYaml }}
+      '@
         Write-Host "REQUIRED_SECRETS: $srcSecrets"
         $yaml = ConvertFrom-Yaml $srcSecrets | ConvertTo-Yaml
         Write-Host "yaml: $yaml"
