@@ -71,7 +71,7 @@ inputs:
 outputs:
   semver:
     description: "The full SemVer version number of the current build"
-    value: ${{ steps.run_script.outputs.SemVer }}
+    value: ${{ steps.run_script.outputs.'GitVersion.SemVer' }}
   major:
     description: "The major version component of the current build"
     value: ${{ steps.run_script.outputs.Major }}
@@ -81,6 +81,9 @@ outputs:
   preReleaseTag:
     description: "The pre-release tag, if any, of the current build"
     value: ${{ steps.run_script.outputs.PreReleaseTag }}
+  allOutputs:
+    description: "All outputs from the build script"
+    value: ${{ steps.run_script.outputs }}
 
 runs:
   using: "composite"  
