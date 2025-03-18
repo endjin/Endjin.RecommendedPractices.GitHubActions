@@ -84,9 +84,6 @@ outputs:
   preReleaseTag:
     description: "The pre-release tag, if any, of the current build"
     value: ${{ steps.run_build.outputs.PreReleaseTag }}
-  allOutputs:
-    description: "All outputs from the build script"
-    value: ${{ steps.run_build.outputs }}
 
 runs:
   using: "composite"  
