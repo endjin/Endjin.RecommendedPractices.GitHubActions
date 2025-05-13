@@ -101,6 +101,11 @@ on:
         required: false
         default: windows-latest
         type: string
+      largeTestResultFiles:
+        description: When true, the publish-unit-test-result-action will be configured to handle large test result files.
+        required: false
+        default: true # The performance impact of this seems small, and we believe there is no behaviour change, so we default to large file support.
+        type: boolean
 
     secrets:
       compilePhaseAzureCredentials:
@@ -312,7 +317,7 @@ jobs:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
         junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
-        large_files: true
+        large_files: ${{ inputs.largeTestResultFiles }}
     - name: Publish Test Results (Windows)
       uses: EnricoMi/publish-unit-test-result-action/windows@170bf24d20d201b842d7a52403b73ed297e6645b   # v2.18.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
@@ -320,7 +325,7 @@ jobs:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
         junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
-        large_files: true
+        large_files: ${{ inputs.largeTestResultFiles }}
 
   package:
     needs:
