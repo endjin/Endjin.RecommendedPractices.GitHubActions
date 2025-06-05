@@ -117,6 +117,8 @@ jobs:
       preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
       with:
         fetch-depth: 0
@@ -181,6 +183,8 @@ jobs:
     name: Test
     runs-on: ${{ inputs.runsOn }}
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0
@@ -295,6 +299,8 @@ jobs:
     name: Package
     runs-on: ${{ inputs.runsOn }}
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
       with:
         fetch-depth: 0
@@ -352,6 +358,8 @@ jobs:
       contents: write
       packages: write
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683   #v4.2.2
       with:
         fetch-depth: 0
