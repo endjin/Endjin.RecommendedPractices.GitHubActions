@@ -248,7 +248,7 @@ jobs:
         buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
-        tasks: 'Test,TestReport'
+        tasks: 'Test'
         configuration: ${{ inputs.configuration }}
         inputCachePaths: |
           .nuget-packages
