@@ -22,6 +22,10 @@ inputs:
   tasks:
     description: The tasks that need to be run as part of the build script, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
     required: true
+  cacheKeySuffix:
+    description: A string that will be appended to the generated cache key used this build script execution
+    required: false
+    default: 'build'
   inputCachePaths:
     description: The caches paths that are consumed/required by this build script execution
     required: false
@@ -100,7 +104,7 @@ runs:
     uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
     with:
       path: ${{ inputs.inputCachePaths }}
-      key: build-state-${{ github.sha }}
+      key: build-state-${{ github.sha }}-${{ inputs.cacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - id: cache_debug
@@ -127,7 +131,7 @@ runs:
     uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
     with:
       path: ${{ inputs.outputCachePaths }}
-      key: build-state-${{ github.sha }}
+      key: build-state-${{ github.sha }}-${{ inputs.cacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - name: Upload Artifact
