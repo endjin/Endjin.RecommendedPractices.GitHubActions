@@ -368,7 +368,7 @@ jobs:
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Package'
         configuration: ${{ inputs.configuration }}
-        cacheKeySuffix: package
+        ouputCacheKeySuffix: package
         inputCachePaths: |
           .nuget-packages
           Solutions
@@ -428,7 +428,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Publish'
-        cacheKeySuffix: package
+        inputCacheKeySuffix: package
         inputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
