@@ -50,6 +50,7 @@ jobs:
         secretsYaml: |
           NUGET_API_KEY: "${{ startsWith(github.ref, 'refs/tags/') && secrets.ENDJIN_NUGET_APIKEY || secrets.ENDJIN_GITHUB_PUBLISHER_PAT }}"
           SBOM_ANALYSIS_RELEASE_READER_PAT: "${{ secrets.ENDJIN_GITHUB_READER_PAT }}"
+        secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}
     - uses: ./actions/run-build-process
       id: run_build
       with:
@@ -61,4 +62,5 @@ jobs:
         buildEnv: ${{ steps.prepareEnvVarsAndSecrets.outputs.environmentVariablesYamlBase64}}
         buildSecrets: ${{ steps.prepareEnvVarsAndSecrets.outputs.secretsYamlBase64 }}
         token: ${{ secrets.GITHUB_TOKEN }}
+        secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}
 
