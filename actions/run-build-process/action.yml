@@ -140,6 +140,7 @@ runs:
         artifactName: ${{ inputs.buildArtifactName }}
         artifactPath: ${{ inputs.buildArtifactPath }}
       env:
+        # TODO: Add equivalent env var overrides for use with ZeroFailed
         BUILDVAR_AnalysisOutputStorageAccountName: ${{ inputs.sbomOutputStorageAccountName}}
         BUILDVAR_AnalysisOutputContainerName: ${{ inputs.sbomOutputStorageContainerName}}
         BUILDVAR_AnalysisOutputBlobPath: ${{ inputs.sbomOutputStorageContainerName }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
