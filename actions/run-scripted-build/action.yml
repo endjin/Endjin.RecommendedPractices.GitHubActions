@@ -111,11 +111,12 @@ runs:
       key: build-state-${{ github.run_id }}-${{ inputs.inputCacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
-  - id: cache_debug
-    if: inputs.inputCachePaths != ''
-    run: |
-      echo "CacheHit: '${{ steps.cache_inputs_restore.outputs.cache-hit }}'"
-    shell: bash
+  - name: Ensure required cached inputs are restored
+    if: inputs.inputCachePaths != '' && steps.cache_inputs_restore.outputs.cache-hit == 'true'
+    uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea   # v7.0.1
+    with:
+      script: |
+        core.setFailed('Aborting build due to a cache restore failure of the required build state.')
   
   - id: run_script
     name: ${{ inputs.displayName }}
