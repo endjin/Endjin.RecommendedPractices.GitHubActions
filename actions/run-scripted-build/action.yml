@@ -112,11 +112,11 @@ runs:
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - name: Ensure required cached inputs are restored
-    if: inputs.inputCachePaths != '' && steps.cache_inputs_restore.outputs.cache-hit == 'true'
+    if: inputs.inputCachePaths != '' && steps.cache_inputs_restore.outputs.cache-hit == 'false'
     uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea   # v7.0.1
     with:
       script: |
-        core.setFailed('Aborting build due to a cache restore failure of the required build state.')
+        core.setFailed('Aborting build: GHA cache restore failure of required build state')
   
   - id: run_script
     name: ${{ inputs.displayName }}
