@@ -108,7 +108,7 @@ runs:
     uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
     with:
       path: ${{ inputs.inputCachePaths }}
-      key: build-state-${{ github.sha }}-${{ inputs.inputCacheKeySuffix }}
+      key: build-state-${{ github.run_id }}-${{ inputs.inputCacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - id: cache_debug
@@ -135,7 +135,7 @@ runs:
     uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
     with:
       path: ${{ inputs.outputCachePaths }}
-      key: build-state-${{ github.sha }}-${{ inputs.outputCacheKeySuffix }}
+      key: build-state-${{ github.run_id }}-${{ inputs.outputCacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - name: Upload Artifact
