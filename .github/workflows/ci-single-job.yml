@@ -50,6 +50,7 @@ jobs:
         secretsYaml: |
           NUGET_API_KEY: "${{ startsWith(github.ref, 'refs/tags/') && secrets.ENDJIN_NUGET_APIKEY || secrets.ENDJIN_GITHUB_PUBLISHER_PAT }}"
           SBOM_ANALYSIS_RELEASE_READER_PAT: "${{ secrets.ENDJIN_GITHUB_READER_PAT }}"
+        secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}
 
   build:
     needs: prepareConfig
@@ -62,3 +63,4 @@ jobs:
     secrets:
       buildAzureCredentials: ${{ secrets.ENDJIN_PROD_ACR_READER_CREDENTIALS }}
       buildSecrets: ${{ needs.prepareConfig.outputs.RESOLVED_SECRETS }}
+      secretsEncryptionKey: ${{ secrets.SHARED_WORKFLOW_KEY }}

@@ -183,6 +183,7 @@ jobs:
         pythonVersion: ${{ inputs.pythonVersion }}
         tasks: 'Build,Analysis'
         configuration: ${{ inputs.configuration }}
+        outputCacheKeySuffix: compile
         outputCachePaths: |
           .nuget-packages
           Solutions
@@ -190,6 +191,7 @@ jobs:
           ${{ inputs.additionalCachePaths }}
         enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
       env:
+        # TODO: Add equivalent env var overrides for use with ZeroFailed
         BUILDVAR_AnalysisOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME}}
         BUILDVAR_AnalysisOutputContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME}}
         BUILDVAR_AnalysisOutputBlobPath: ${{ vars.SBOM_OUTPUT_STORAGE_BLOB_BASE_PATH }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
@@ -250,6 +252,7 @@ jobs:
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Test'
         configuration: ${{ inputs.configuration }}
+        inputCacheKeySuffix: compile
         inputCachePaths: |
           .nuget-packages
           Solutions
@@ -259,6 +262,7 @@ jobs:
         artifactName: ${{ inputs.testArtifactName }}
         artifactPath: ${{ inputs.testArtifactPath }}
       env:
+        # TODO: Add equivalent env var overrides for use with ZeroFailed
         # Set build to produce .trx test results file which will be picked-up when publishing test results
         BUILDVAR_DotNetTestLoggers: >
           [
@@ -368,12 +372,14 @@ jobs:
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Package'
         configuration: ${{ inputs.configuration }}
+        inputCacheKeySuffix: compile
         inputCachePaths: |
           .nuget-packages
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
         enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
+        outputCacheKeySuffix: package
         outputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
@@ -427,6 +433,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Publish'
+        inputCacheKeySuffix: package
         inputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}

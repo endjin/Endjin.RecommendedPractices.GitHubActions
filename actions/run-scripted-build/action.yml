@@ -22,6 +22,14 @@ inputs:
   tasks:
     description: The tasks that need to be run as part of the build script, formatted as a comma-delimited string (e.g. 'FullBuild' or 'Build,Test').
     required: true
+  inputCacheKeySuffix:
+    description: A string that will be appended to the generated cache key used this build script execution
+    required: false
+    default: 'build'
+  outputCacheKeySuffix:
+    description: A string that will be appended to the generated cache key used this build script execution
+    required: false
+    default: 'build'
   inputCachePaths:
     description: The caches paths that are consumed/required by this build script execution
     required: false
@@ -100,14 +108,15 @@ runs:
     uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
     with:
       path: ${{ inputs.inputCachePaths }}
-      key: build-state-${{ github.sha }}
+      key: build-state-${{ github.run_id }}-${{ inputs.inputCacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
-  - id: cache_debug
-    if: inputs.inputCachePaths != ''
-    run: |
-      echo "CacheHit: '${{ steps.cache_inputs_restore.outputs.cache-hit }}'"
-    shell: bash
+  - name: Ensure required cached inputs are restored
+    if: inputs.inputCachePaths != '' && steps.cache_inputs_restore.outputs.cache-hit == 'false'
+    uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea   # v7.0.1
+    with:
+      script: |
+        core.setFailed('Aborting build: GHA cache restore failure of required build state')
   
   - id: run_script
     name: ${{ inputs.displayName }}
@@ -127,7 +136,7 @@ runs:
     uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
     with:
       path: ${{ inputs.outputCachePaths }}
-      key: build-state-${{ github.sha }}
+      key: build-state-${{ github.run_id }}-${{ inputs.outputCacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
   - name: Upload Artifact
