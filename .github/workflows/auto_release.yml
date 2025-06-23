@@ -228,9 +228,10 @@ jobs:
 
     - name: Generate token
       id: generate_token
-      uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a   # v1.9
+      uses: tibdex/github-app-token@3beb63f4bd073e61482598c45c71c1019b59b73a   # v2.1.0
       with:
-        app_id: ${{ secrets.ENDJIN_BOT_APP_ID }}
+        installation_retrieval_mode: id
+        installation_retrieval_payload: ${{ secrets.ENDJIN_BOT_APP_ID }}
         private_key: ${{ secrets.ENDJIN_BOT_PRIVATE_KEY }}
 
     - name: Create SemVer tag
