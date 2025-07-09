@@ -199,8 +199,12 @@ runs:
         echo "RUNNEROS=$RunnerOs" >> $env:GITHUB_OUTPUT
       shell: pwsh
     - name: Add Code Coverage PR comment
-      # TODO: Test whether this works when running from a fork?
-      if: always() && steps.check_coverage_summary.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
+      # Builds run from forks will not have permission to annotate the PR
+      if: |
+        always() &&
+        steps.check_coverage_summary.outputs.EXISTS == 'true' &&
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
       uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943    # v2.9.3
       with:
         recreate: true
