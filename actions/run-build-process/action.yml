@@ -44,16 +44,6 @@ inputs:
     description: When true, the publish-unit-test-result-action will be configured to handle large test result files.
     required: false
     default: 'true' # The performance impact of this seems small, and we believe there is no behaviour change, so we default to large file support.
-  # Secrets
-  buildAzureCredentials:
-    description: A secret containing the Azure credentials required to run the build process.
-    required: false
-  buildSecrets:
-    description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
-    required: false
-  token:
-    description: 'A GitHub token'
-    required: true
   codeCoverageSummaryDir:
     description: 'The directory where the code coverage summary file is stored'
     required: false
@@ -68,6 +58,16 @@ inputs:
   sbomOutputStorageContainerName:
     description: 'The name of the storage container where the SBOM output will be stored'
     required: false
+  # Secrets
+  buildAzureCredentials:
+    description: A secret containing the Azure credentials required to run the build process.
+    required: false
+  buildSecrets:
+    description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
+    required: false
+  token:
+    description: 'A GitHub token'
+    required: true
   secretsEncryptionKey:
     description: A string representing the shared secret used to encrypt the secrets YAML object.
     required: false
@@ -89,6 +89,9 @@ outputs:
 runs:
   using: "composite"  
   steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
+      shell: bash
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
       with:
         fetch-depth: 0
@@ -103,7 +106,7 @@ runs:
       run: |
         echo "inputs: ${{ toJson(inputs) }}"
         echo "ref: ${{ github.ref }}"
-        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_OUTPUT
+        echo "CODE_COVERAGE_SUMMARY_DIR=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_OUTPUT
         echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_OUTPUT
         echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_OUTPUT
       shell: bash
@@ -123,7 +126,7 @@ runs:
         fi
     - name: Azure CLI login
       if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
       with:
         creds: ${{ inputs.buildAzureCredentials }}
         enable-AzPSSession: true
@@ -141,6 +144,7 @@ runs:
         artifactName: ${{ inputs.buildArtifactName }}
         artifactPath: ${{ inputs.buildArtifactPath }}
       env:
+        # TODO: Add equivalent env var overrides for use with ZeroFailed
         BUILDVAR_AnalysisOutputStorageAccountName: ${{ inputs.sbomOutputStorageAccountName}}
         BUILDVAR_AnalysisOutputContainerName: ${{ inputs.sbomOutputStorageContainerName}}
         BUILDVAR_AnalysisOutputBlobPath: ${{ inputs.sbomOutputStorageContainerName }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
@@ -199,9 +203,13 @@ runs:
         echo "RUNNEROS=$RunnerOs" >> $env:GITHUB_OUTPUT
       shell: pwsh
     - name: Add Code Coverage PR comment
-      # TODO: Test whether this works when running from a fork?
-      if: always() && steps.check_coverage_summary.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
-      uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728    # v2.9.1
+      # Builds run from forks will not have permission to annotate the PR
+      if: |
+        always() &&
+        steps.check_coverage_summary.outputs.EXISTS == 'true' &&
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943    # v2.9.3
       with:
         recreate: true
         path: ${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_DIR }}/${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_FILE }}

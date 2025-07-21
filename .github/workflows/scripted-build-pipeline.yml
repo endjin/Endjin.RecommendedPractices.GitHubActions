@@ -122,6 +122,8 @@ jobs:
       preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
       with:
         fetch-depth: 0
@@ -147,7 +149,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.compilePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
       with:
         creds: ${{ secrets.compilePhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -161,12 +163,14 @@ jobs:
         pythonVersion: ${{ inputs.pythonVersion }}
         tasks: 'Build,Analysis'
         configuration: ${{ inputs.configuration }}
+        outputCacheKeySuffix: compile
         outputCachePaths: |
           .nuget-packages
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
       env:
+        # TODO: Add equivalent env var overrides for use with ZeroFailed
         BUILDVAR_AnalysisOutputStorageAccountName: ${{ vars.SBOM_OUTPUT_STORAGE_ACCOUNT_NAME}}
         BUILDVAR_AnalysisOutputContainerName: ${{ vars.SBOM_OUTPUT_STORAGE_CONTAINER_NAME}}
         BUILDVAR_AnalysisOutputBlobPath: ${{ vars.SBOM_OUTPUT_STORAGE_BLOB_BASE_PATH }}/src_platform=github/org=${{ github.repository_owner }}/repo=${{ github.event.repository.name }}
@@ -186,6 +190,8 @@ jobs:
     name: Test
     runs-on: ${{ inputs.runsOn }}
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0
@@ -210,7 +216,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.testPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
       with:
         creds: ${{ secrets.testPhaseAzureCredentials }}
         enable-AzPSSession: true
@@ -220,8 +226,9 @@ jobs:
         buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
-        tasks: 'Test,TestReport'
+        tasks: 'Test'
         configuration: ${{ inputs.configuration }}
+        inputCacheKeySuffix: compile
         inputCachePaths: |
           .nuget-packages
           Solutions
@@ -230,6 +237,7 @@ jobs:
         artifactName: ${{ inputs.testArtifactName }}
         artifactPath: ${{ inputs.testArtifactPath }}
       env:
+        # TODO: Add equivalent env var overrides for use with ZeroFailed
         # Set build to produce .trx test results file which will be picked-up when publishing test results
         BUILDVAR_DotNetTestLoggers: >
           [
@@ -271,9 +279,13 @@ jobs:
         echo "RUNNEROS=$RunnerOs" >> $env:GITHUB_OUTPUT
       shell: pwsh
     - name: Add Code Coverage PR comment
-      # TODO: Test whether this works when running from a fork?
-      if: always() && steps.check_coverage_summary.outputs.EXISTS == 'true' && github.event_name == 'pull_request'
-      uses: marocchino/sticky-pull-request-comment@52423e01640425a022ef5fd42c6fb5f633a02728    # v2.9.1
+      # Builds run from forks will not have permission to annotate the PR
+      if: |
+        always() &&
+        steps.check_coverage_summary.outputs.EXISTS == 'true' &&
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943    # v2.9.3
       with:
         recreate: true
         path: ${{ env.CODE_COVERAGE_SUMMARY_DIR }}/${{ env.CODE_COVERAGE_SUMMARY_FILE }}
@@ -302,6 +314,8 @@ jobs:
     name: Package
     runs-on: ${{ inputs.runsOn }}
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
       with:
         fetch-depth: 0
@@ -326,7 +340,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.packagePhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
       with:
         creds: ${{ secrets.packagePhaseAzureCredentials }}
         enable-AzPSSession: true     
@@ -338,11 +352,13 @@ jobs:
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Package'
         configuration: ${{ inputs.configuration }}
+        inputCacheKeySuffix: compile
         inputCachePaths: |
           .nuget-packages
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
+        outputCacheKeySuffix: package
         outputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
@@ -359,6 +375,8 @@ jobs:
       contents: write
       packages: write
     steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683   #v4.2.2
       with:
         fetch-depth: 0
@@ -383,7 +401,7 @@ jobs:
         fi
     - name: Azure CLI login
       if: ${{ steps.publishPhaseAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@a65d910e8af852a8061c627c456678983e180302    # v2.2.0
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
       with:
         creds: ${{ secrets.publishPhaseAzureCredentials }}
         enable-AzPSSession: true    
@@ -394,6 +412,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         tasks: 'Publish'
+        inputCacheKeySuffix: package
         inputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
