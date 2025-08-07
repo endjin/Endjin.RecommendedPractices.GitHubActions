@@ -19,7 +19,7 @@ runs:
 
   - name: Get cached NPM modules
     id: cache_npm_dependencies
-    uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
+    uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809    # v4.2.4
     with:
       path: |
         .github/node_modules
@@ -45,7 +45,7 @@ runs:
 
   - name: Store generated web site
     id: cache_site
-    uses: actions/cache/save@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
+    uses: actions/cache/save@0400d5f644dc74513175e3cd8d07132dd4860809    # v4.2.4
     with:
       path: website.zip
       key: website-${{ github.sha }}
