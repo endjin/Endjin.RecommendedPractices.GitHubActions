@@ -318,14 +318,14 @@ jobs:
         header: ${{ matrix.os }}-${{ matrix.dotnetFramework }}
     # Conditional test result publishing as we can't use the docker version of the action on Windows
     - name: Publish Test Results (Linux)
-      uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b   # v2.18.0
+      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040   # v2.23.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'linux'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
         trx_files: "**/test-results_*.trx" # produced by dotnet test
         junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
     - name: Publish Test Results (Windows)
-      uses: EnricoMi/publish-unit-test-result-action/windows@170bf24d20d201b842d7a52403b73ed297e6645b   # v2.18.0
+      uses: EnricoMi/publish-unit-test-result-action/windows@c950f6fb443cb5af20a377fd0dfaa78838901040   # v2.23.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
       with:
         nunit_files: "*TestResults.xml"    # produced by Pester
