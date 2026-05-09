@@ -290,16 +290,20 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040   # v2.23.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'linux'
       with:
-        nunit_files: "*TestResults.xml"    # produced by Pester
-        trx_files: "**/test-results_*.trx" # produced by dotnet test
-        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
+        # Look for test results produced by Pester, VSTest/MTP & PyTest/Behave
+        files: |
+          TestResults.xml
+          **/test-results*.trx
+          **/*-test-results.xml
     - name: Publish Test Results (Windows)
       uses: EnricoMi/publish-unit-test-result-action/windows@c950f6fb443cb5af20a377fd0dfaa78838901040   # v2.23.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
       with:
-        nunit_files: "*TestResults.xml"    # produced by Pester
-        trx_files: "**/test-results_*.trx" # produced by dotnet test
-        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
+        # Look for test results produced by Pester, VSTest/MTP & PyTest/Behave
+        files: |
+          TestResults.xml
+          **/test-results*.trx
+          **/*-test-results.xml
 
   package:
     needs:
