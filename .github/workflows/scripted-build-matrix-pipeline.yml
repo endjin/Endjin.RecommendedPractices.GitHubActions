@@ -28,9 +28,19 @@ on:
         description: A JSON object representing the environment variables required when running the 'compile' stage of this workflow.
         required: false
         type: string
+      compilePhaseTasks:
+        description: The tasks that need to be run as part of the 'compile' stage, formatted as a comma-delimited string (e.g. 'Build' or 'Build,Analysis').
+        required: false
+        default: 'Build,Analysis'
+        type: string
       testPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'test' stage of this workflow.
         required: false
+        type: string
+      testPhaseTasks:
+        description: The tasks that need to be run as part of the 'test' stage, formatted as a comma-delimited string (e.g. 'Test' or 'Test,TestReport').
+        required: false
+        default: 'Test'
         type: string
       testArtifactName:
         description: If set, during the test phase, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
@@ -44,9 +54,19 @@ on:
         description: A JSON object representing the environment variables required when running the 'package' stage of this workflow.
         required: false
         type: string
+      packagePhaseTasks:
+        description: The tasks that need to be run as part of the 'package' stage, formatted as a comma-delimited string.
+        required: false
+        default: 'Package'
+        type: string
       publishPhaseEnv:
         description: A JSON object representing the environment variables required when running the 'publish' stage of this workflow.
         required: false
+        type: string
+      publishPhaseTasks:
+        description: The tasks that need to be run as part of the 'publish' stage, formatted as a comma-delimited string.
+        required: false
+        default: 'Publish'
         type: string
       publishArtifactName:
         description: If set, during the publish phase, uploads a GitHub artifact with the provided name (path must be specified in `artifactPath`)
@@ -101,11 +121,6 @@ on:
         required: false
         default: windows-latest
         type: string
-      postCompileScript:
-        description: Optional PowerShell script to run in a parallel job after compile completes (alongside test and package). When set, a 'post-compile' job is added that restores the compile cache and runs this script.
-        required: false
-        default: ''
-        type: string
       postCompileRunnerOs:
         description: The operating system to run the optional 'post-compile' job on.
         required: false
@@ -114,6 +129,11 @@ on:
       postCompilePhaseEnv:
         description: A JSON object representing the environment variables required when running the optional 'post-compile' job.
         required: false
+        type: string
+      postCompilePhaseTasks:
+        description: The tasks that need to be run as part of the 'post-compile' stage, formatted as a comma-delimited string.
+        required: false
+        default: 'postCompile'
         type: string
       postCompileArtifactName:
         description: If set, during the post-compile phase, uploads a GitHub artifact with the provided name (path must be specified in `postCompileArtifactPath`).
@@ -183,7 +203,7 @@ jobs:
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
         pythonVersion: ${{ inputs.pythonVersion }}
-        tasks: 'Build,Analysis'
+        tasks: ${{ inputs.compilePhaseTasks }}
         configuration: ${{ inputs.configuration }}
         outputCacheKeySuffix: compile
         outputCachePaths: |
@@ -228,7 +248,7 @@ jobs:
         buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
-        tasks: 'Test'
+        tasks: ${{ inputs.testPhaseTasks }}
         configuration: ${{ inputs.configuration }}
         inputCacheKeySuffix: compile
         inputCachePaths: |
@@ -328,7 +348,7 @@ jobs:
         buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
-        tasks: 'Package'
+        tasks: ${{ inputs.packagePhaseTasks }}
         configuration: ${{ inputs.configuration }}
         inputCacheKeySuffix: compile
         inputCachePaths: |
@@ -355,36 +375,24 @@ jobs:
         additionalEnvVars: ${{ inputs.postCompilePhaseEnv}}
         additionalSecrets: ${{ secrets.postCompilePhaseSecrets }}
         secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
-    - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7   # v5.2.0
-      name: Install .NET Core SDK ${{ inputs.netSdkVersion }}
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      id: run_post_compile
       with:
-        dotnet-version: '${{ inputs.netSdkVersion }}'
-    - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7   # v5.2.0
-      if: inputs.additionalNetSdkVersion != ''
-      name: Install .NET Core SDK ${{ inputs.additionalNetSdkVersion }}
-      with:
-        dotnet-version: '${{ inputs.additionalNetSdkVersion }}'
-    - name: Restore compile cache
-      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae    # v5.0.5
-      id: cache_restore
-      with:
-        path: |
+        displayName: Post-Compile
+        buildScriptPath: ${{ inputs.buildScriptPath }}
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        pythonVersion: ${{ inputs.pythonVersion }}
+        tasks: ${{ inputs.postCompilePhaseTasks }}
+        configuration: ${{ inputs.configuration }}
+        inputCacheKeySuffix: compile
+        outputCacheKeySuffix: postcompile
+        outputCachePaths: |
           .nuget-packages
           Solutions
           solutions
           ${{ inputs.additionalCachePaths }}
-        key: build-state-${{ github.run_id }}-compile
-        enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
-    - name: Ensure compile cache restored
-      if: steps.cache_restore.outputs.cache-hit == 'false'
-      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3   # v9.0.0
-      with:
-        script: |
-          core.setFailed('Aborting post-compile: GHA cache restore failure of required compile state')
-    - name: Run post-compile script
-      run: pwsh -File ${{ inputs.postCompileScript }}
-      env:
-        NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
+        enableCrossOsCaching: ${{ inputs.enableCrossOsCaching}}
     - name: Upload artifact
       if: inputs.postCompileArtifactName != '' && inputs.postCompileArtifactPath != ''
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a    # v7.0.1
@@ -418,7 +426,7 @@ jobs:
         buildScriptPath: ${{ inputs.buildScriptPath }}
         netSdkVersion: ${{ inputs.netSdkVersion }}
         additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
-        tasks: 'Publish'
+        tasks: ${{ inputs.publishPhaseTasks }}
         inputCacheKeySuffix: package
         inputCachePaths: |
           _packages
