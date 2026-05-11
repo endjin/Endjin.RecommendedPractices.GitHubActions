@@ -101,6 +101,30 @@ on:
         required: false
         default: windows-latest
         type: string
+      postCompileScript:
+        description: Optional PowerShell script to run in a parallel job after compile completes (alongside test and package). When set, a 'post-compile' job is added that restores the compile cache and runs this script.
+        required: false
+        default: ''
+        type: string
+      postCompileRunnerOs:
+        description: The operating system to run the optional 'post-compile' job on.
+        required: false
+        default: ubuntu-latest
+        type: string
+      postCompilePhaseEnv:
+        description: A JSON object representing the environment variables required when running the optional 'post-compile' job.
+        required: false
+        type: string
+      postCompileArtifactName:
+        description: If set, during the post-compile phase, uploads a GitHub artifact with the provided name (path must be specified in `postCompileArtifactPath`).
+        required: false
+        default: ''
+        type: string
+      postCompileArtifactPath:
+        description: If set, during the post-compile phase, uploads a GitHub artifact with the provided path (name must be specified in `postCompileArtifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline delimiter.
+        required: false
+        default: ''
+        type: string
 
     secrets:
       compilePhaseAzureCredentials:
@@ -122,6 +146,9 @@ on:
         required: false
       publishPhaseSecrets:
         description: A YAML string representing a dictionary of secrets required when running the 'publish' stage of this workflow.
+        required: false
+      postCompilePhaseSecrets:
+        description: A YAML string representing a dictionary of secrets required when running the optional 'post-compile' job.
         required: false
       secretsEncryptionKey:
         description: A string representing the shared secret used to encrypt the secrets YAML object.
@@ -388,11 +415,68 @@ jobs:
           _packages
           ${{ inputs.additionalCachePaths }}
 
+  post-compile:
+    needs:
+    - compile
+    name: Post-Compile
+    if: inputs.postCompileScript != ''
+    runs-on: ${{ inputs.postCompileRunnerOs }}
+    steps:
+    - name: Enable long paths
+      run: git config --global core.longpaths true
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+      with:
+        environmentVariablesYamlBase64: ${{ inputs.postCompilePhaseEnv }}
+        secretsYamlBase64: ${{ secrets.postCompilePhaseSecrets }}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
+    - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7   # v5.2.0
+      name: Install .NET Core SDK ${{ inputs.netSdkVersion }}
+      with:
+        dotnet-version: '${{ inputs.netSdkVersion }}'
+    - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7   # v5.2.0
+      if: inputs.additionalNetSdkVersion != ''
+      name: Install .NET Core SDK ${{ inputs.additionalNetSdkVersion }}
+      with:
+        dotnet-version: '${{ inputs.additionalNetSdkVersion }}'
+    - name: Restore compile cache
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae    # v5.0.5
+      id: cache_restore
+      with:
+        path: |
+          .nuget-packages
+          Solutions
+          solutions
+          ${{ inputs.additionalCachePaths }}
+        key: build-state-${{ github.run_id }}-compile
+        enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
+    - name: Ensure compile cache restored
+      if: steps.cache_restore.outputs.cache-hit == 'false'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3   # v9.0.0
+      with:
+        script: |
+          core.setFailed('Aborting post-compile: GHA cache restore failure of required compile state')
+    - name: Run post-compile script
+      run: pwsh -File ${{ inputs.postCompileScript }}
+      env:
+        NUGET_PACKAGES: ${{ github.workspace }}/.nuget-packages
+    - name: Upload artifact
+      if: inputs.postCompileArtifactName != '' && inputs.postCompileArtifactPath != ''
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a    # v7.0.1
+      with:
+        name: ${{ inputs.postCompileArtifactName }}
+        path: ${{ inputs.postCompileArtifactPath }}
+        include-hidden-files: true
+
   publish:
     needs:
     - compile
     - test
     - package
+    - post-compile
     name: Publish
     if: inputs.forcePublish || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest

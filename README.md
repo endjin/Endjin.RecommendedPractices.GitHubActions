@@ -7,6 +7,7 @@ Our standardised build process is divided into the following phases:
 - Test
 - Analyse
 - Package
+- Post-Compile *(optional, runs in parallel with Test and Package)*
 - Publish
 
 By default, the 'Publish' phase is only executed for tagged versions or when manually triggered with the 'Force Publish' option enabled.
@@ -43,9 +44,13 @@ graph LR
     test1-->pubtests["Publish Test Results"] 
     test2-->pubtests["Publish Test Results"] 
     analyse-->package["Build Packages"]
+    analyse-->postcompile["Post-Compile (optional)"]
     pubtests-->publish["Publish Packages"]
     package-->publish
+    postcompile-->publish
 ```
+
+The Post-Compile phase is optional and only runs when the `postCompileScript` input is set. It restores the compile cache and runs a custom PowerShell script in parallel with the Test and Package phases. This is useful for heavy post-compile work such as documentation website builds that don't need to block tests.
 
 
 ### Single-Job Workflow
