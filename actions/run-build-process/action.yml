@@ -85,47 +85,12 @@ outputs:
 runs:
   using: "composite"  
   steps:
-    - name: Enable long paths
-      run: git config --global core.longpaths true
-      shell: bash
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+    - uses: ./actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
       with:
-        fetch-depth: 0
-        submodules: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
-      with: 
-        environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
-        secretsYamlBase64: ${{ inputs.buildSecrets}}
+        azureCredentials: ${{ inputs.buildAzureCredentials }}
+        additionalEnvVars: ${{ inputs.buildEnv }}
+        additionalSecrets: ${{ inputs.buildSecrets}}
         secretsEncryptionKey: ${{ inputs.secretsEncryptionKey }}
-    - name: Set defaults
-      id: set_defaults
-      run: |
-        echo "inputs: ${{ toJson(inputs) }}"
-        echo "ref: ${{ github.ref }}"
-        echo "CODE_COVERAGE_SUMMARY_DIR=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_OUTPUT
-        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_OUTPUT
-        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: Debug Variables
-      if: env.ACTIONS_RUNNER_DEBUG == 'true'
-      run: |
-        gci env:/ | fl | out-string | Write-Host
-      shell: pwsh
-    - name: Check if buildAzureCredentials secret is set
-      id: buildAzureCredentials_secret_check
-      shell: bash
-      run: |
-        if [ "${{ inputs.buildAzureCredentials }}" != '' ]; then
-          echo "available=true" >> $GITHUB_OUTPUT;
-        else
-          echo "available=false" >> $GITHUB_OUTPUT;
-        fi
-    - name: Azure CLI login
-      if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43    # v3.0.0
-      with:
-        creds: ${{ inputs.buildAzureCredentials }}
-        enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_build
       name: Run Build
