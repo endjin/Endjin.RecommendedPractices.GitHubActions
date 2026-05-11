@@ -117,7 +117,7 @@ jobs:
       preReleaseTag: ${{ steps.run_compile.outputs.preReleaseTag }}
 
     steps:
-    - uses: ./actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
+    - uses: ./actions/endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
       with:
         azureCredentials: ${{ secrets.compilePhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.compilePhaseEnv}}
@@ -160,7 +160,7 @@ jobs:
     name: Test
     runs-on: ${{ inputs.runsOn }}
     steps:
-    - uses: ./actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
+    - uses: ./actions/endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
       with:
         azureCredentials: ${{ secrets.testPhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.testPhaseEnv}}
@@ -262,7 +262,7 @@ jobs:
     name: Package
     runs-on: ${{ inputs.runsOn }}
     steps:
-    - uses: ./actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
+    - uses: ./actions/endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
       with:
         azureCredentials: ${{ secrets.packagePhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.packagePhaseEnv}}
@@ -299,7 +299,7 @@ jobs:
       contents: write
       packages: write
     steps:
-    - uses: ./actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
+    - uses: ./actions/endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
       with:
         azureCredentials: ${{ secrets.publishPhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.publishPhaseEnv}}
