@@ -50,7 +50,19 @@ graph LR
     postcompile-->publish
 ```
 
-The Post-Compile phase is optional and only runs when the `postCompileScript` input is set. It restores the compile cache and runs a custom PowerShell script in parallel with the Test and Package phases. This is useful for heavy post-compile work such as documentation website builds that don't need to block tests.
+The Post-Compile phase is optional and only runs when the `postCompilePhaseTasks` input is set. It runs a standard scripted build using the default task of `postCompile` (overridable via the `postCompilePhaseTasks` intput) and runs in parallel with the Test and Package phases. This is useful for heavy post-compile work such as documentation website builds that don't need to block tests.
+
+#### Customising Build Tasks
+
+These multi-job workflows support customising which InvokeBuild tasks are run for each stage via inputs that accept one or more comma-delimited task names, as shown in the table below:
+
+| Stage       | Input Name              | Defaults       |
+| ----------- | ----------------------- | -------------- |
+| Compile     | `compilePhaseTasks`     | Build,Analysis |
+| Test        | `testPhaseTasks`        | Test           |
+| Package     | `packagePhaseTasks`     | Package        |
+| PostCompile | `postCompilePhaseTasks` | postCompile    |
+| Publish     | `publishPhaseTasks`     | Publish        |
 
 
 ### Single-Job Workflow
@@ -70,6 +82,10 @@ graph LR
     package-->publish["Publish Packages"]
     publish-->pubtests["Publish Test Results"] 
 ```
+
+### Customising Build Tasks
+
+This single-job workflow option supports customising which InvokeBuild tasks are run via the `buildTasks` input that accepts one or more comma-delimited task named.
 
 
 ## Composite Actions
@@ -98,6 +114,12 @@ These composite actions are used to encapsulated specific functionality so it ca
 - `run-scripted-build` - encapsulates the steps for executing our [PowerShell-based build tooling](https://www.powershellgallery.com/packages/Endjin.RecommendedPractices.Build) - typically used via one of the above reusable workflows.
 - `set-env-vars-and-secrets` - the consuming side of the workaround for passing arbitrary environment variables and secrets. Unwraps the bundled environment variables and secrets so they are available to the running workflow.
 
+### Customising Build Tasks
+
+This composite action supports customising which InvokeBuild tasks are run via the `buildTasks` input that accepts one or more comma-delimited task named.
+
+
+
 ## Examples
 
 The following workflows serve as examples of how to consume the different reusable workflows and composite actions found in this repo:
@@ -106,5 +128,3 @@ The following workflows serve as examples of how to consume the different reusab
 - [ci-matrix.yml](.github/workflows/ci-matrix.yml) - used for validating changes to the `scripted-build-matrix-pipeline` reusable workflow
 - [ci-single-job.yml](.github/workflows/ci-single-job.yml) - used for validating changes to the `scripted-build-single-job-pipeline` reusable workflow
 - [ci-composite-action](.github/workflows/ci-composite-action.yml) - used for validating change to the `run-build-process` composite action
-
-
