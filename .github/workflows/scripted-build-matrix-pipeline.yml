@@ -370,7 +370,7 @@ jobs:
     needs:
     - compile
     name: Post-Compile
-    if: inputs.postCompileScript != ''
+    if: inputs.postCompilePhaseTasks != ''
     runs-on: ${{ inputs.postCompileRunnerOs }}
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
