@@ -56,13 +56,13 @@ The Post-Compile phase is optional and only runs when the `postCompilePhaseTasks
 
 These multi-job workflows support customising which InvokeBuild tasks are run for each stage via inputs that accept one or more comma-delimited task names, as shown in the table below:
 
-| Stage       | Input Name              | Defaults       |
-| ----------- | ----------------------- | -------------- |
-| Compile     | `compilePhaseTasks`     | Build,Analysis |
-| Test        | `testPhaseTasks`        | Test           |
-| Package     | `packagePhaseTasks`     | Package        |
-| PostCompile | `postCompilePhaseTasks` | postCompile    |
-| Publish     | `publishPhaseTasks`     | Publish        |
+| Stage       | Input Name              | Defaults                                               |
+| ----------- | ----------------------- | ------------------------------------------------------ |
+| Compile     | `compilePhaseTasks`     | Build,Analysis                                         |
+| Test        | `testPhaseTasks`        | Test                                                   |
+| Package     | `packagePhaseTasks`     | Package                                                |
+| PostCompile | `postCompilePhaseTasks` | '' (this phase will not run unless explicitly defined) |
+| Publish     | `publishPhaseTasks`     | Publish                                                |
 
 
 ### Single-Job Workflow

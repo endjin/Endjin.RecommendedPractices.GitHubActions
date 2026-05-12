@@ -133,7 +133,7 @@ on:
       postCompilePhaseTasks:
         description: The tasks that need to be run as part of the 'post-compile' stage, formatted as a comma-delimited string.
         required: false
-        default: 'postCompile'
+        default: ''
         type: string
       postCompileArtifactName:
         description: If set, during the post-compile phase, uploads a GitHub artifact with the provided name (path must be specified in `postCompileArtifactPath`).
