@@ -96,6 +96,30 @@ on:
         required: false
         default: ubuntu-latest
         type: string
+      postCompileRunnerOs:
+        description: The operating system to run the optional 'post-compile' job on.
+        required: false
+        default: ubuntu-latest
+        type: string
+      postCompilePhaseEnv:
+        description: A JSON object representing the environment variables required when running the optional 'post-compile' job.
+        required: false
+        type: string
+      postCompilePhaseTasks:
+        description: The tasks that need to be run as part of the 'post-compile' stage, formatted as a comma-delimited string.
+        required: false
+        default: ''
+        type: string
+      postCompileArtifactName:
+        description: If set, during the post-compile phase, uploads a GitHub artifact with the provided name (path must be specified in `postCompileArtifactPath`).
+        required: false
+        default: ''
+        type: string
+      postCompileArtifactPath:
+        description: If set, during the post-compile phase, uploads a GitHub artifact with the provided path (name must be specified in `postCompileArtifactName`). The path can be a file, directory or wildcard pattern; multiple paths can be specified using newline delimiter.
+        required: false
+        default: ''
+        type: string        
 
     secrets:
       compilePhaseAzureCredentials:
@@ -306,6 +330,49 @@ jobs:
         outputCachePaths: |
           _packages
           ${{ inputs.additionalCachePaths }}
+
+  postCompile:
+    needs:
+    - compile
+    name: Post-Compile
+    if: inputs.postCompilePhaseTasks != ''
+    runs-on: ${{ inputs.postCompileRunnerOs }}
+    steps:
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
+      with:
+        azureCredentials: ${{ secrets.postCompilePhaseAzureCredentials }}
+        additionalEnvVars: ${{ inputs.postCompilePhaseEnv}}
+        additionalSecrets: ${{ secrets.postCompilePhaseSecrets }}
+        secretsEncryptionKey: ${{ secrets.secretsEncryptionKey }}
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
+      id: run_post_compile
+      with:
+        displayName: Post-Compile
+        buildScriptPath: ${{ inputs.buildScriptPath }}
+        netSdkVersion: ${{ inputs.netSdkVersion }}
+        additionalNetSdkVersion: ${{ inputs.additionalNetSdkVersion }}
+        pythonVersion: ${{ inputs.pythonVersion }}
+        tasks: ${{ inputs.postCompilePhaseTasks }}
+        configuration: ${{ inputs.configuration }}
+        inputCacheKeySuffix: compile
+        inputCachePaths: |
+          .nuget-packages
+          Solutions
+          solutions
+          ${{ inputs.additionalCachePaths }}
+        outputCacheKeySuffix: postcompile
+        outputCachePaths: |
+          .nuget-packages
+          Solutions
+          solutions
+          ${{ inputs.additionalCachePaths }}
+    - name: Upload artifact
+      if: inputs.postCompileArtifactName != '' && inputs.postCompileArtifactPath != ''
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a    # v7.0.1
+      with:
+        name: ${{ inputs.postCompileArtifactName }}
+        path: ${{ inputs.postCompileArtifactPath }}
+        include-hidden-files: true
 
   publish:
     needs:
