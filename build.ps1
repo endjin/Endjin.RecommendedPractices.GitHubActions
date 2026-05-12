@@ -167,8 +167,3 @@ task PostPackage {}
 task PrePublish {}
 task PostPublish {}
 task RunLast {}
-
-# Synopsis: Placeholder task to test the optional postCompile phase in the matrix build
-task postCompile {
-    Write-Build 'Post-Compile job'
-}
