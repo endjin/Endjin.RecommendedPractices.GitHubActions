@@ -390,6 +390,11 @@ jobs:
         tasks: ${{ inputs.postCompilePhaseTasks }}
         configuration: ${{ inputs.configuration }}
         inputCacheKeySuffix: compile
+        inputCachePaths: |
+          .nuget-packages
+          Solutions
+          solutions
+          ${{ inputs.additionalCachePaths }}
         outputCacheKeySuffix: postcompile
         outputCachePaths: |
           .nuget-packages
