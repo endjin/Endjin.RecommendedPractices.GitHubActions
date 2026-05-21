@@ -91,6 +91,15 @@ runs:
         additionalEnvVars: ${{ inputs.buildEnv }}
         additionalSecrets: ${{ inputs.buildSecrets}}
         secretsEncryptionKey: ${{ inputs.secretsEncryptionKey }}
+    - name: Set defaults
+      id: set_defaults
+      run: |
+        echo "inputs: ${{ toJson(inputs) }}"
+        echo "ref: ${{ github.ref }}"
+        echo "CODE_COVERAGE_SUMMARY_DIR=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_OUTPUT
+        echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_OUTPUT
+        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || github.ref_type == 'tag') && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_OUTPUT
+      shell: bash
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_build
       name: Run Build
