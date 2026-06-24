@@ -191,7 +191,7 @@ runs:
       with:
         # Look for test results produced by Pester, VSTest/MTP & PyTest/Behave
         files: |
-          TestResults.xml
+          *TestResults.xml
           **/test-results*.trx
           **/*-test-results.xml
     - name: Publish Test Results (Windows)
@@ -200,6 +200,6 @@ runs:
       with:
         # Look for test results produced by Pester, VSTest/MTP & PyTest/Behave
         files: |
-          TestResults.xml
+          *TestResults.xml
           **/test-results*.trx
           **/*-test-results.xml
