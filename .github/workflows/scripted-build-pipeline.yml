@@ -338,7 +338,7 @@ jobs:
     if: inputs.postCompilePhaseTasks != ''
     runs-on: ${{ inputs.postCompileRunnerOs }}
     steps:
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@feature/194-post-compile-parallel-job
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
         azureCredentials: ${{ secrets.postCompilePhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.postCompilePhaseEnv}}
@@ -379,8 +379,13 @@ jobs:
     - compile
     - test
     - package
+    - postCompile
     name: Publish
-    if: inputs.forcePublish || startsWith(github.ref, 'refs/tags/')
+    # 'always()'-style guard so a skipped 'postCompile' job doesn't skip 'publish';
+    # '!failure() && !cancelled()' still blocks publish if an upstream job failed.
+    if: >-
+      !cancelled() && !failure() &&
+      (inputs.forcePublish || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
