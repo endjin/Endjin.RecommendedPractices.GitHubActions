@@ -40,10 +40,6 @@ inputs:
     description: The operating system to run all stages of this workflow.
     required: false
     default: ubuntu-latest
-  largeTestResultFiles:
-    description: When true, the publish-unit-test-result-action will be configured to handle large test result files.
-    required: false
-    default: 'true' # The performance impact of this seems small, and we believe there is no behaviour change, so we default to large file support.
   codeCoverageSummaryDir:
     description: 'The directory where the code coverage summary file is stored'
     required: false
@@ -89,17 +85,11 @@ outputs:
 runs:
   using: "composite"  
   steps:
-    - name: Enable long paths
-      run: git config --global core.longpaths true
-      shell: bash
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
-        fetch-depth: 0
-        submodules: true
-    - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
-      with: 
-        environmentVariablesYamlBase64: ${{ inputs.buildEnv}}
-        secretsYamlBase64: ${{ inputs.buildSecrets}}
+        azureCredentials: ${{ inputs.buildAzureCredentials }}
+        additionalEnvVars: ${{ inputs.buildEnv }}
+        additionalSecrets: ${{ inputs.buildSecrets}}
         secretsEncryptionKey: ${{ inputs.secretsEncryptionKey }}
     - name: Set defaults
       id: set_defaults
@@ -108,28 +98,8 @@ runs:
         echo "ref: ${{ github.ref }}"
         echo "CODE_COVERAGE_SUMMARY_DIR=${{ inputs.codeCoverageSummaryDir || '_codeCoverage' }}" >> $GITHUB_OUTPUT
         echo "CODE_COVERAGE_SUMMARY_FILE=${{ inputs.codeCoverageSummaryFile || 'SummaryGithub.md' }}" >> $GITHUB_OUTPUT
-        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || startsWith(github.ref, 'refs/tags/')) && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_OUTPUT
+        echo "DEFAULT_BUILD_TASKS=${{ (inputs.forcePublish == 'true' || github.ref_type == 'tag') && 'FullBuildAndPublish' || 'FullBuild' }}" >> $GITHUB_OUTPUT
       shell: bash
-    - name: Debug Variables
-      if: env.ACTIONS_RUNNER_DEBUG == 'true'
-      run: |
-        gci env:/ | fl | out-string | Write-Host
-      shell: pwsh
-    - name: Check if buildAzureCredentials secret is set
-      id: buildAzureCredentials_secret_check
-      shell: bash
-      run: |
-        if [ "${{ inputs.buildAzureCredentials }}" != '' ]; then
-          echo "available=true" >> $GITHUB_OUTPUT;
-        else
-          echo "available=false" >> $GITHUB_OUTPUT;
-        fi
-    - name: Azure CLI login
-      if: ${{ steps.buildAzureCredentials_secret_check.outputs.available == 'true' }}
-      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
-      with:
-        creds: ${{ inputs.buildAzureCredentials }}
-        enable-AzPSSession: true
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/run-scripted-build@main
       id: run_build
       name: Run Build
@@ -209,25 +179,27 @@ runs:
         steps.check_coverage_summary.outputs.EXISTS == 'true' &&
         github.event_name == 'pull_request' &&
         github.event.pull_request.head.repo.full_name == github.repository
-      uses: marocchino/sticky-pull-request-comment@d2ad0de260ae8b0235ce059e63f2949ba9e05943    # v2.9.3
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88    # v3.0.5
       with:
         recreate: true
         path: ${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_DIR }}/${{ steps.set_defaults.outputs.CODE_COVERAGE_SUMMARY_FILE }}
         header: ${{ inputs.runsOn }}
     # Conditional test result publishing as we can't use the docker version of the action on Windows
     - name: Publish Test Results (Linux)
-      uses: EnricoMi/publish-unit-test-result-action@170bf24d20d201b842d7a52403b73ed297e6645b   # v2.18.0
+      uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3   # v2.24.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'linux'
       with:
-        nunit_files: "*TestResults.xml"    # produced by Pester
-        trx_files: "**/test-results_*.trx" # produced by dotnet test
-        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
-        large_files: ${{ inputs.largeTestResultFiles == 'true' }}
+        # Look for test results produced by Pester, VSTest/MTP & PyTest/Behave
+        files: |
+          *TestResults.xml
+          **/test-results*.trx
+          **/*-test-results.xml
     - name: Publish Test Results (Windows)
-      uses: EnricoMi/publish-unit-test-result-action/windows@170bf24d20d201b842d7a52403b73ed297e6645b   # v2.18.0
+      uses: EnricoMi/publish-unit-test-result-action/windows@d0a4676d0e0b938bc201470d88276b7c74c712b3   # v2.24.0
       if: always() && steps.check_os.outputs.RUNNEROS == 'windows'
       with:
-        nunit_files: "*TestResults.xml"    # produced by Pester
-        trx_files: "**/test-results_*.trx" # produced by dotnet test
-        junit_files: "**/*-test-results.xml" # produced by PyTest & Behave
-        large_files: ${{ inputs.largeTestResultFiles == 'true' }}
+        # Look for test results produced by Pester, VSTest/MTP & PyTest/Behave
+        files: |
+          *TestResults.xml
+          **/test-results*.trx
+          **/*-test-results.xml

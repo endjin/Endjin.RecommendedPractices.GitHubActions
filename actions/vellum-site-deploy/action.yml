@@ -29,7 +29,7 @@ runs:
   steps:
   - name: Retrieve generated web site
     id: restore_cached_site
-    uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684    # v4.2.3
+    uses: actions/cache/restore@2c8a9bd7457de244a408f35966fab2fb45fda9c8    # v6.0.0
     with:
       path: website.zip
       key: website-${{ github.sha }}
@@ -49,7 +49,7 @@ runs:
     working-directory: ${{ github.workspace }}
     shell: bash
 
-  - uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5    # v2.3.0
+  - uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c    # v3.0.2
     with:
       client-id: ${{ inputs.azureClientId }}
       tenant-id: ${{ inputs.azureTenantId }}
@@ -57,7 +57,7 @@ runs:
       enable-AzPSSession: true
 
   - name: 'Check existing preview sites'
-    uses: azure/powershell@53dd145408794f7e80f97cfcca04155c85234709   # v2.0.0
+    uses: azure/powershell@f5b8adcfff1904872c7b98d4012d4914d74b1a82   # v3.0.0
     with:
       inlineScript: |
         # Lookup the web site name from provided configuration

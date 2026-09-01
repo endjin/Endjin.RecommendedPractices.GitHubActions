@@ -1,0 +1,53 @@
+name: common-pre-run-scripted-build
+description: Common steps typically required before running the 'run-scripted-build' composite action
+inputs:
+  azureCredentials:
+    description: 
+    required: false
+    default: ''
+  additionalEnvVars:
+    description: A JSON object representing the environment variables required when running the 'compile' stage of this workflow.
+    required: false
+    type: string
+  additionalSecrets:
+    description: A YAML string representing a dictionary of secrets required when running the 'compile' stage of this workflow.
+    required: false
+  secretsEncryptionKey:
+    description: A string representing the shared secret used to encrypt the secrets YAML object.
+    required: false
+
+runs:
+  using: "composite"  
+  steps:
+  - name: Enable long paths
+    run: git config --global core.longpaths true
+    shell: pwsh
+  - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    with:
+      fetch-depth: 0
+      submodules: true
+  - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
+    with: 
+      environmentVariablesYamlBase64: ${{ inputs.additionalEnvVars}}
+      secretsYamlBase64: ${{ inputs.additionalSecrets}}
+      secretsEncryptionKey: ${{ inputs.secretsEncryptionKey }}
+  - name: Debug Variables
+    if: env.ACTIONS_RUNNER_DEBUG == 'true'
+    run: |
+      gci env:/ | fl | out-string | Write-Host
+    shell: pwsh
+  - name: Check if azureCredentials secret is set
+    id: azureCredentials_secret_check
+    shell: bash
+    run: |
+      if [ "${{ inputs.azureCredentials }}" != '' ]; then
+        echo "available=true" >> $GITHUB_OUTPUT;
+      else
+        echo "available=false" >> $GITHUB_OUTPUT;
+      fi
+  - name: Azure CLI login
+    if: ${{ inputs.azureCredentials != '' }}
+    uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c    # v3.0.2
+    with:
+      creds: ${{ inputs.azureCredentials }}
+      enable-AzPSSession: true
