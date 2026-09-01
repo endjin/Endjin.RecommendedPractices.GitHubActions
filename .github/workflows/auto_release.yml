@@ -161,7 +161,7 @@ jobs:
     - name: Enable long paths
       run: git config --global core.longpaths true
 
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Read pr-autoflow configuration
       id: get_pr_autoflow_config
       uses: endjin/pr-autoflow/actions/read-configuration@v4
@@ -210,14 +210,14 @@ jobs:
     if: |
       needs.check_ready_to_release.outputs.ready_to_release == 'true'
     steps:
-    - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7    # v5.2.0
+    - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68    # v6.0.0
       with:
         dotnet-version: '6.x'
 
     - name: Enable long paths
       run: git config --global core.longpaths true
 
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 #v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         # ensure we are creating the release tag on the default branch
         ref: ${{ needs.lookup_default_branch.outputs.branch_name }}
