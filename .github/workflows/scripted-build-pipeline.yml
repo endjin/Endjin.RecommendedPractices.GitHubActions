@@ -91,6 +91,11 @@ on:
         required: false
         default: ./build.ps1
         type: string
+      checkoutFilter:
+        description: "A partial clone filter for each job's checkout, as per the 'filter' input of 'actions/checkout' (e.g. 'blob:none'). Each job fetches the full history of every branch and tag; with 'blob:none' it fetches only the file contents of the commit being built, which avoids downloading large generated content held on other branches (e.g. 'gh-pages'). Leave empty for a full clone."
+        required: false
+        type: string
+        default: ''
       runsOn:
         description: The operating system to run all stages of this workflow.
         required: false
@@ -163,6 +168,7 @@ jobs:
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
+        checkoutFilter: ${{ inputs.checkoutFilter }}
         azureCredentials: ${{ secrets.compilePhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.compilePhaseEnv}}
         additionalSecrets: ${{ secrets.compilePhaseSecrets}}
@@ -206,6 +212,7 @@ jobs:
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
+        checkoutFilter: ${{ inputs.checkoutFilter }}
         azureCredentials: ${{ secrets.testPhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.testPhaseEnv}}
         additionalSecrets: ${{ secrets.testPhaseSecrets}}
@@ -308,6 +315,7 @@ jobs:
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
+        checkoutFilter: ${{ inputs.checkoutFilter }}
         azureCredentials: ${{ secrets.packagePhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.packagePhaseEnv}}
         additionalSecrets: ${{ secrets.packagePhaseSecrets}}
@@ -340,6 +348,7 @@ jobs:
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
+        checkoutFilter: ${{ inputs.checkoutFilter }}
         azureCredentials: ${{ secrets.postCompilePhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.postCompilePhaseEnv}}
         additionalSecrets: ${{ secrets.postCompilePhaseSecrets }}
@@ -393,6 +402,7 @@ jobs:
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
+        checkoutFilter: ${{ inputs.checkoutFilter }}
         azureCredentials: ${{ secrets.publishPhaseAzureCredentials }}
         additionalEnvVars: ${{ inputs.publishPhaseEnv}}
         additionalSecrets: ${{ secrets.publishPhaseSecrets}}
