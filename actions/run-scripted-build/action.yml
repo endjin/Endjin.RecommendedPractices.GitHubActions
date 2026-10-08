@@ -111,8 +111,11 @@ runs:
       key: build-state-${{ github.run_id }}-${{ inputs.inputCacheKeySuffix }}
       enableCrossOsArchive: ${{ inputs.enableCrossOsCaching }}
 
+  # 'cache-hit' is 'true' only when the key was found. When nothing is restored it is an empty string, not 'false'
+  # ('false' is reported only for a partial match through restore-keys, which the step above does not use), so a
+  # miss has to be detected as "not 'true'".
   - name: Ensure required cached inputs are restored
-    if: inputs.inputCachePaths != '' && steps.cache_inputs_restore.outputs.cache-hit == 'false'
+    if: inputs.inputCachePaths != '' && steps.cache_inputs_restore.outputs.cache-hit != 'true'
     uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3   # v9.0.0
     with:
       script: |
