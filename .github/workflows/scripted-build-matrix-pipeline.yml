@@ -423,9 +423,10 @@ jobs:
       !cancelled() && !failure() &&
       (inputs.forcePublish || startsWith(github.ref, 'refs/tags/'))
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
+    # No job-level 'permissions:' block: the job inherits the caller's permissions. A caller already grants
+    # 'contents: write' and 'packages: write' for publishing, and one that also grants 'id-token: write' lets the
+    # build request an OIDC token, for example for NuGet.org Trusted Publishing. A job-level block would replace
+    # the caller's permissions, and asking for 'id-token: write' here would fail every caller that doesn't grant it.
     steps:
     - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/common-pre-scripted-build@main
       with:
