@@ -15,6 +15,15 @@ inputs:
   secretsEncryptionKey:
     description: A string representing the shared secret used to encrypt the secrets YAML object.
     required: false
+  checkoutFilter:
+    description: >-
+      A partial clone filter for the checkout, as per the 'filter' input of 'actions/checkout' (for example
+      'blob:none'). The checkout fetches the full history of every branch and tag, which versioning needs. With
+      'blob:none' it still fetches every commit, but only the file contents of the commit being built, which matters
+      when another branch holds large generated content (a 'gh-pages' branch that receives a copy of a site for
+      every deployment, for instance). Leave empty for a full clone.
+    required: false
+    default: ''
 
 runs:
   using: "composite"  
@@ -25,6 +34,7 @@ runs:
   - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     with:
       fetch-depth: 0
+      filter: ${{ inputs.checkoutFilter }}
       submodules: true
   - uses: endjin/Endjin.RecommendedPractices.GitHubActions/actions/set-env-vars-and-secrets@main
     with: 
